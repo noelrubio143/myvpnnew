@@ -14,7 +14,16 @@
     {
       "label": "Free VLESS #1",
       "serverType": "v2ray",
-      "v2rayLink": "vless://...",
+      "v2rayLink": "vless:\/\/...",
+      "enabled": true
+    },
+    {
+      "label": "Free SSH - tttt",
+      "serverType": "ssh",
+      "host": "47.80.83.157",
+      "port": "22",
+      "username": "tttt",
+      "password": "tttt",
       "enabled": true
     }
   ]
