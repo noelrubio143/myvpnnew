@@ -28,6 +28,15 @@
       "serverType": "v2ray",
       "v2rayLink": "vless:\/\/6979802f-ad21-49e7-9674-c84d7982186a@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#ditook",
       "enabled": true
+    },
+    {
+      "label": "Free SSH - try",
+      "serverType": "ssh",
+      "host": "47.80.83.157",
+      "port": "22",
+      "username": "try",
+      "password": "try",
+      "enabled": true
     }
   ]
 }
