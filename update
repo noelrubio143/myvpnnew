@@ -16,12 +16,6 @@
       "serverType": "v2ray",
       "v2rayLink": "vless://...",
       "enabled": true
-    },
-    {
-      "label": "test-server-1",
-      "serverType": "v2ray",
-      "enabled": true,
-      "v2rayLink": "vless://test-example-link"
     }
   ]
 }
