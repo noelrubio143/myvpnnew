@@ -10,6 +10,12 @@
       "username": "ys",
       "password": "ss",
       "enabled": true
+    },
+    {
+      "label": "Free VLESS - as",
+      "serverType": "v2ray",
+      "v2rayLink": "vless:\/\/5bc2cda7-f176-4846-b55c-25a840418e95@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#as",
+      "enabled": true
     }
   ]
 }
