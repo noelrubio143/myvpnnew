@@ -1,15 +1,5 @@
 {
   "adminConfigBackup": "z6XIW104i8qj+nVmpgyEfkMJq3s9OT9kKxjP\/ZFlhlNpBAOqxgSvFBxTslNxsYg6TLI2QfzgViPVrHN1lwOrQf\/ieTWW3V+6eQ141blg9f2EunfpZV4Qq1RRCPDZhLIojC8mfebyZTeziXjrVFfteL3cummc240oYdJUZKomhOQcA5kvCxlLOlhX\/Wa4lq8aF4xFzbemmhODt8\/22g8dMpv6wFPQwt9eYpxE5N9PQNO4WKlunwEcbeOmSuQZETUcmAvJ6HkJOAHhRdEcYR+bMYcbZQYA1aT5Z0hW\/i22BvTzdXHsxy53PO+6u44xLTp1HyYi7HEGSfIQY46aB8JFJB+a\/tDbiWBFoceEE3hxhCmp7nLVrHDCO\/XkrJ\/IGNOurLv5fVxcYXV6d5snmhUPn6XQ3gXJz6Xrx4dGDSrsR1npXlnrGIax8om4W\/NNlKWvk0BryOZwdg==",
   "announcement": "",
-  "servers": [
-    {
-      "label": "Free SSH - la",
-      "serverType": "ssh",
-      "host": "47.80.83.157",
-      "port": "22",
-      "username": "la",
-      "password": "al",
-      "enabled": true
-    }
-  ]
+  "servers": []
 }
