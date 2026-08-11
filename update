@@ -22,6 +22,12 @@
       "serverType": "v2ray",
       "v2rayLink": "vless:\/\/6f795fa2-c9f4-4d7a-9c3e-3f878741547d@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#ditooksiya",
       "enabled": true
+    },
+    {
+      "label": "Free VLESS - ditook",
+      "serverType": "v2ray",
+      "v2rayLink": "vless:\/\/6979802f-ad21-49e7-9674-c84d7982186a@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#ditook",
+      "enabled": true
     }
   ]
 }
