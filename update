@@ -1,1 +1,21 @@
-
+{
+  "announcement": "Welcome! Be fair to other users.",
+  "servers": [
+    {
+      "label": "Free SSH #1",
+      "serverType": "ssh",
+      "host": "1.2.3.4",
+      "port": "443",
+      "username": "shared",
+      "password": "shared123",
+      "payloadType": 4,
+      "enabled": true
+    },
+    {
+      "label": "Free VLESS #1",
+      "serverType": "v2ray",
+      "v2rayLink": "vless://...",
+      "enabled": true
+    }
+  ]
+}
