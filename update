@@ -10,6 +10,12 @@
       "username": "ambervpn",
       "password": "ambervpn",
       "enabled": true
+    },
+    {
+      "label": "Free VLESS - hi",
+      "serverType": "v2ray",
+      "v2rayLink": "vless:\/\/e9fad7d5-4f10-432e-b98b-58e23b0070e3@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#hi",
+      "enabled": true
     }
   ]
 }
