@@ -7,6 +7,15 @@
       "serverType": "v2ray",
       "v2rayLink": "vless:\/\/7e9570fc-2abd-4f19-8a17-59071bd21426@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#testing1",
       "enabled": true
+    },
+    {
+      "label": "Free Community Server",
+      "serverType": "ssh",
+      "host": "19",
+      "port": "443",
+      "username": "test",
+      "password": "test",
+      "enabled": true
     }
   ]
 }
