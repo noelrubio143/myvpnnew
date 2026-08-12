@@ -16,6 +16,12 @@
       "serverType": "v2ray",
       "v2rayLink": "vless:\/\/e9fad7d5-4f10-432e-b98b-58e23b0070e3@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#hi",
       "enabled": true
+    },
+    {
+      "label": "Free VLESS - testing1",
+      "serverType": "v2ray",
+      "v2rayLink": "vless:\/\/7e9570fc-2abd-4f19-8a17-59071bd21426@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#testing1",
+      "enabled": true
     }
   ]
 }
