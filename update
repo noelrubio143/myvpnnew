@@ -1,12 +1,5 @@
 {
   "adminConfigBackup": "uTDIQRJ3RIthJBaIjdxn+0\/v4cYarANHvI18yrEZqIU\/45o\/H3WkvQxOB8+SIQbFrnrYS0YW4mozzSI4797NCGpgqzeBXlB2xqrcbMrzqVtZsqUfHH8yMRbTHGbmVWBqei5bkbHZw2mD9DVeoTm+0cHCXJqW4k5LNOOeWcWso7f4mt9ScVfScGhtgKGKgWI55OH750P0FrNOvwR9+H48tDES+dftOifTtxYUlpJgW3sV2v0n5nzq6fP3MZqm3lOAVnUdcVnxq8DHep6DivS1dHRReaZYGv5j0qsI+iaQekRyFWSYVm+qN5D8DbwN6\/amxpexB6R8QMS2yOljtWacvx8Yzzf4dW3CpHgOV++GOAtuwfchgM9pBQssVSkeuzuSz9xHQV1b5K+tTx6oKiwn9W6EIkME+LkgM9W9YOU9+GeUR+PAdimnkNlHEVQMzJQMBX7M8SiseA==",
   "announcement": "yhh",
-  "servers": [
-    {
-      "label": "Free VLESS - teskkk",
-      "serverType": "v2ray",
-      "v2rayLink": "vless:\/\/5dc8b49d-22fa-4f3a-b58a-734f48de4e04@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#teskkk",
-      "enabled": true
-    }
-  ]
+  "servers": []
 }
