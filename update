@@ -16,6 +16,12 @@
       "username": "test",
       "password": "test",
       "enabled": true
+    },
+    {
+      "label": "Free Xray Server",
+      "serverType": "v2ray",
+      "v2rayLink": "vless:\/\/fa77ae9a-7828-460e-bc6d-e26c089dc896@ambersvpn.shop:80?encryption=none&type=ws&host=ambersvpn.shop&headerType=none&path=%2Fvless#social",
+      "enabled": true
     }
   ]
 }
