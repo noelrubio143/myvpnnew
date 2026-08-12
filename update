@@ -1,15 +1,5 @@
 {
-  "adminConfigBackup": "46Svc5bxfgHYtPlkOslQve5hxdf22+ZVweEW1GupgnvxR5KMypAigoyKeAIf3j48Wco4pEayDGEM2tNu5r8j3c0XQqi7TyNxbsgemXXqZkiwyFuaqZk5IRMv7unRblHGWCpjqlCFY/553/6sWK84GBQGoh4dFn3m96oT+zCD1ujN5zIyN4a0kOaRpuj6mIKrHM6sg6UebnyNwpbBZqft7J2usydIadFY+WjwZBwBQzWQLsu9fPFKGq0acjxrQiDD4EJY8xrQDSC7qgzkIm/6N/Eu7MJy70KXV9ZXsuxgd4YftySTO7CtM0GlMjvha1JgVf1KxzYkTakBY9dJL2yo0vQllhMEeFyYd+g+7Kdg4TA9emUKOYyAFHqssHJsK1RNyw4s7HatC20HUdhG6iEaJC8e62pJW0pLtF+jgaWJBFH6Yr4+fOcxeVzWOGmADlyhyuz45/2U4ascea/ZjEyi2Bl/5c34mGExtuo+FcyW+kbKKX1KMrrP095IsOGDId4Y4sDL7RzJaz6dVPTi2OCC3Kz618IYJBp5HutRW/qTV/R7B+MlSMZ/THqN+rNYFl2Y4GXZJJeLBX0REbpCuy0TdBAfW46WI/WVsiOPL9TJ31rnvpSACVH7ulPrTXTg59W4QuGn2HsQjB7nnOSUvliO5MkPoSV1RR9teI5Y0QmjLk7CnW6BsuLyYLFe2f1xJFxAWZAObwPLhJPPOCOIuhzIVqZiN2xgkAsEdqaT6zTYI7dcCF35F8KF9lZjmgvNRF0S2SHjb+4p2mWq2MfOlvgEEFVLJy+T4XFXg/KSR5Z80DoXbIMVmVjFP2OcCIogVNGbKcBb8DyPySfC+hihMd64MzQdwbzDx2AJQh1M8YmitKkIChqPUcbjGKK/3bYPxPJlCMSSyJGiyjtdzbx6V76w6ufPjGLREXHeBrQykbipmm8OYaV3MjQb+wvCj0YG3kFF3saTpB9Ne+P4LZeuvxcLBiaWyP02CQDotp7slm/D4lykJm64dHDXTKkzCcDEqKFfz/9+oRLEz2ftrx9veg2qbAE90FgZ7zVaY0N9RdMjvTx5l1K6iNBDFFJGhm1R3uwX/EbK0Jsxkd8kktSDAye4scgEaiOUAIlp",
+  "adminConfigBackup": "GCkP6Z8a1JDPUmrAJwgPAoSY5dTdnQ38Pl4S83AwE95PA09Nhg/SXGdk2KO5YvzCL3I6y0POL1VUPlYs3sFc9BwtaHVtpBaDno/+AdFQOku5hZtgdetScVtTM6rjbrMTcgAWFUwqZeDTULELs49kWZHnwmXkhzpzD7qmKkDJIYRRBdo/ovZn2tRPIuh2qcX4xXp2Xb/WSah02XjBhFwWOqgY6MGMSxmfFMqgHtfB5+Pq6Kw2x2WrBfhOg1WgCEHKEz90aP9pt+3dglXiofxVNXQa/KXOGA+fOUCASj8HyXXgWcSsnvaSVvqFaENl96XMRlNA9IMJ26EflgN5yNwv56mA+Li92Z/t9tP4O1Ero3GsAyEU+RwWNTlDafEBPQJX527M23yg68syEViTspqNarUkkRFcVnKRgPOy8A4bzWwt1WNfnaclTe/4IfvAA/xEQZYjvV2MqwFaOo96Rv6D4siQxlOVkXldMRX7fkR+rxB0YID4PbR5zpTDYcMmQMCb3W2MEgqUip51NQzhjO4lA9kTnWicf0xLqlgMhFzFYFR4fkb8LXw/Eua/ldHKMWJeE7kzv1P0de+jkXDfymv2wAu+edlvNFALSvOs9rN4ipS28NxvIfpL2ppfVvb0vu80WwE67/9KPb7kIMYeZoGkhXP07ArAHSihYl5HQ5XlG43L/1xQDYmrkTFbjH0bhPFfE6QCSzfHlXAr3oNEh8F1wor/",
   "announcement": "",
-  "servers": [
-    {
-      "label": "Free Community Server",
-      "serverType": "ssh",
-      "host": "47.80.83.157",
-      "port": "22",
-      "username": "root",
-      "password": "Noel1990",
-      "enabled": true
-    }
-  ]
+  "servers": []
 }
