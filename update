@@ -3,12 +3,6 @@
   "announcement": "yhh",
   "servers": [
     {
-      "label": "Free VLESS - h",
-      "serverType": "v2ray",
-      "v2rayLink": "vless:\/\/a332d66b-b6e0-4538-ad78-eb10952b006a@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#h",
-      "enabled": true
-    },
-    {
       "label": "Free VLESS - teskkk",
       "serverType": "v2ray",
       "v2rayLink": "vless:\/\/5dc8b49d-22fa-4f3a-b58a-734f48de4e04@ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#teskkk",
