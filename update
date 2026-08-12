@@ -2,15 +2,3 @@
   "adminConfigBackup": "OinxtbRFRdiL9K3HfCTk0BRHCHIPduJf6ewE2seBqXO886k1pVB5xXWSIhiviIdb9In3H7XPHu4pXM7vvHs8l2d5KEJtUPKVrfUd9R+bHkcIFy+jri9ZmEsD5Qc8PH1oHSBl/d3f5sYrjrtewZpjSl2gbYLYroghJIuCVNfxcCoSTjxoc37TEOPeepeE+sBKWdKng/tU8MVfI6o5LuFm3uZAghKqiSlEcwrCqb2diIKLNt4JpCseaR6p8150HwomrZklkGR3j+Cs17rZyu2w3nM+DTTWWufNvzN5vv+5AW4w3r8SFiwpL1sk2JQzwDWabGHjpd/t4KMovcDjZeGOvATz7ZiYLze0j9Me5Cw7Vfpt+y743HdRwNTe0BGQy6/dj7pHWI2bebGXmGJLDqCC6jcGPqRfGoH9EigygD79ExYNunkv/0HRt/FmkUILYZWSPrTqqfosMQ==",
   "announcement": "DONATION  FOR SERVER ANY AMOUNT\n\nGCASH# 09610414393",
   "servers": [
-    {
-      "label": "Free SSH #1",
-      "serverType": "ssh",
-      "host": "47.80.83.157",
-      "port": "22",
-      "username": "root",
-      "password": "Noel1990",
-      "payloadType": 4,
-      "enabled": true
-    }
-  ]
-}
