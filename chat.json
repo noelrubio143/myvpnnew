@@ -1,11 +1,3 @@
 {
-  "messages": [
-    {
-      "id": "ab123bcd-cdc4-4fbd-801b-9a7018e6ff13",
-      "sender": "Guest1780",
-      "text": "test123",
-      "ts": 1786519351068,
-      "pinned": false
-    }
-  ]
+  "messages": []
 }
