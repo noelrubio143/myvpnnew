@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GitHub Sync — Admin Tool</title>
+<title>Notes</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -38,737 +38,174 @@
     font-size: 20px;
     margin: 0 0 4px 0;
   }
-  h2 {
-    font-size: 16px;
-    margin: 0 0 4px 0;
-  }
   .subtitle {
     color: var(--muted);
     font-size: 13px;
     margin-bottom: 20px;
   }
-  .warning {
-    background: #3d2b0f;
-    border: 1px solid #9e6a03;
-    color: #e3b341;
-    font-size: 12.5px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-  label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    margin: 14px 0 6px;
-  }
-  input, textarea, select {
+  textarea {
     width: 100%;
     background: var(--input-bg);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 9px 10px;
+    padding: 10px 12px;
     border-radius: 6px;
     font-size: 14px;
     font-family: inherit;
-  }
-  textarea {
-    min-height: 100px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 13px;
+    min-height: 70px;
     resize: vertical;
   }
-  .row {
-    display: flex;
-    gap: 12px;
-  }
-  .row > div { flex: 1; }
-  textarea.masked {
-    -webkit-text-security: disc;
-    text-security: disc;
-  }
   button {
-    margin-top: 20px;
-    width: 100%;
-    padding: 11px;
+    margin-top: 12px;
+    padding: 11px 16px;
     background: var(--accent);
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
   }
   button:hover { background: var(--accent-hover); }
-  button:disabled {
-    background: #21262d;
-    color: var(--muted);
-    cursor: not-allowed;
-  }
-  button.secondary {
-    background: #21262d;
-    border: 1px solid var(--border);
-  }
-  button.secondary:hover { background: #30363d; }
   button.danger {
     background: #3a1618;
     border: 1px solid var(--danger);
     color: #ffa198;
   }
   button.danger:hover { background: #4a1c1f; }
-  #status {
-    margin-top: 14px;
-    font-size: 13px;
-    padding: 10px 12px;
-    border-radius: 6px;
-    display: none;
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-row button { flex: 1; }
+  #notesList {
+    list-style: none;
+    margin: 22px 0 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #notesList li {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  #notesList .note-text {
     white-space: pre-wrap;
     word-break: break-word;
+    font-size: 14px;
+    line-height: 1.5;
   }
-  #status.ok {
-    display: block;
-    background: #0d2818;
-    border: 1px solid #238636;
-    color: #7ee787;
-  }
-  #status.err {
-    display: block;
-    background: #2d1214;
-    border: 1px solid var(--danger);
-    color: #ffa198;
-  }
-  #status a { color: #7ee787; }
-  .hint {
-    font-size: 11.5px;
+  #notesList .note-date {
     color: var(--muted);
+    font-size: 11.5px;
     margin-top: 4px;
   }
-  .section-note {
+  #notesList button.del {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--danger);
+    padding: 6px 10px;
+    margin: 0;
     font-size: 12px;
+    flex-shrink: 0;
+  }
+  #notesList button.del:hover { background: #2d1214; }
+  .empty {
     color: var(--muted);
-    line-height: 1.5;
-    margin-top: 8px;
+    font-size: 13px;
+    text-align: center;
+    padding: 24px 0;
   }
 </style>
 </head>
 <body>
-<div class="card">
-  <h1>GitHub Sync — Admin Tool</h1>
-  <div class="subtitle">Central na admin tool para sa GitHub-based na pag-sync ng token at VPS admin settings backup. Ito na lang ang gamitin, hindi na naka-built-in sa app mismo.</div>
 
-  <div class="warning">
-    ⚠️ Ang token ay ginagamit lang sa browser session mo — hindi ito naise-save o nagpapadala kahit saan maliban sa api.github.com. Isara ang tab na ito pagkatapos gamitin kung shared o public na computer. Gumamit ng fine-grained PAT na naka-limit lang sa isang repo, "Contents: Read and write" lang.
+<div class="card" id="app">
+  <h1>📝 Notes</h1>
+  <div class="subtitle">Maglagay ng note sa ibaba, pwede maraming notes. Naka-save automatic sa browser mo.</div>
+
+  <textarea id="noteInput" placeholder="Isulat ang note dito..."></textarea>
+  <div class="btn-row">
+    <button type="button" id="addBtn">➕ Idagdag ang Note</button>
+    <button type="button" id="deleteAllBtn" class="danger">🗑️ Burahin Lahat</button>
   </div>
 
-  <label for="token">GitHub Personal Access Token (o naka-encrypt na token)</label>
-  <input type="password" id="token" value="" placeholder="github_pat_... o encrypted blob" autocomplete="off" />
-  <div class="hint">Settings → Developer settings → Fine-grained tokens → grant "Contents: Read and write" sa target repo lang.</div>
-
-  <label for="tokenPassphrase">Token Passphrase (para i-decrypt/i-encrypt ang token)</label>
-  <input type="password" id="tokenPassphrase" value="" placeholder="passphrase mo" autocomplete="off" />
-  <button type="button" id="encryptTokenBtn" class="secondary">🔒 I-encrypt ang Token</button>
-  <div class="hint">1) I-paste ang totoong token sa taas. 2) Ilagay ang passphrase. 3) Pindutin ito — mapapalitan ng encrypted blob ang Token field, ligtas mo na 'yong i-save sa file. Ide-decrypt na lang ito automatic (gamit ang passphrase) tuwing gagamitin ang mga button sa ibaba.</div>
-
-  <div style="display:none;">
-    <label for="tokenBackupPath">Token Backup — File path (sa GitHub repo)</label>
-    <input type="password" autocomplete="off" id="tokenBackupPath" value="token" placeholder="hal. token" />
-  </div>
-  <div class="row">
-    <div><button type="button" id="backupTokenBtn" class="secondary">⬆️ Backup Token to GitHub</button></div>
-    <div><button type="button" id="restoreTokenBtn" class="secondary">⬇️ Restore Token from GitHub</button></div>
-  </div>
-  <div class="row">
-    <div><button type="button" id="copyTokenBtn" class="secondary">📋 Copy Token (naka-mask/encrypted)</button></div>
-  </div>
-  <div class="hint">Kokopyahin ang laman ng Token field kung ano man ang nakalagay dito ngayon (naka-encrypt na blob kadalasan pagkatapos mag-restore) — hindi ito ide-decrypt, direktang kopya lang ito papunta sa clipboard mo.</div>
-  <div class="hint">Ise-save ang naka-encrypt na token (gamit ang Token Passphrase sa itaas) sa parehong GitHub file, sa ilalim ng sarili nitong key. Sa ibang browser/device, i-restore mo lang gamit ang parehong Owner/Repo/Path + Token Passphrase (token mismo hindi na kailangan kung public ang repo) — hindi mo na kailangang kopyahin nang manual ang buong encrypted blob.</div>
-
-  <h2 style="margin-top:24px;">VPS Self-Service Settings</h2>
-  <div class="section-note">Ito yung parehong VPS root login + self-service settings na nasa app (VPS Self-Service section). Naka-encrypt (gamit ang Token Passphrase sa itaas) bago i-store sa GitHub file — sarili nitong key din, hiwalay sa token at sa server list.</div>
-
-  <div class="row" style="display:none;">
-    <div>
-      <label for="vpsHost">VPS IP</label>
-      <input type="password" autocomplete="off" id="vpsHost" value="" placeholder="hal. 123.45.67.89" />
-    </div>
-    <div>
-      <label for="vpsPort">SSH Port</label>
-      <input type="password" autocomplete="off" id="vpsPort" value="22" placeholder="22" />
-    </div>
-  </div>
-  <div class="row" style="display:none;">
-    <div>
-      <label for="vpsUser">Root username</label>
-      <input type="password" autocomplete="off" id="vpsUser" value="root" />
-    </div>
-    <div>
-      <label for="vpsPass">Root password</label>
-      <input type="password" autocomplete="off" id="vpsPass" value="" placeholder="VPS root password" />
-    </div>
-  </div>
-  <div class="row">
-    <div>
-      <label for="vpsSshDays">Default SSH validity (days)</label>
-      <input type="password" autocomplete="off" id="vpsSshDays" value="30" />
-    </div>
-    <div>
-      <label for="vpsVlessDays">Default VLESS validity (days)</label>
-      <input type="password" autocomplete="off" id="vpsVlessDays" value="30" />
-    </div>
-  </div>
-  <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin-top:10px;">
-    <input type="checkbox" id="vpsEnabled" style="width:auto;" />
-    Allow app users to create their own SSH & VLESS accounts (self-service)
-  </label>
-
-  <div class="row" style="margin-top:14px;">
-    <div><button type="button" id="backupVpsBtn" class="secondary">⬆️ Backup VPS Settings to GitHub</button></div>
-    <div><button type="button" id="restoreVpsBtn" class="secondary">⬇️ Restore VPS Settings from GitHub</button></div>
-  </div>
-  <div class="hint">Kailangan ng Token Passphrase sa itaas para ma-encrypt/ma-decrypt. Ise-save sa ilalim ng sariling "vpsBackup" key sa parehong GitHub file, hiwalay sa Token Backup.</div>
-
-  <h2 style="margin-top:24px;">🔐 Backup / Restore LAHAT ng Credentials</h2>
-  <div class="section-note">Isang pindot lang para ma-imbak (o mabalik) ang Token AT VPS settings nang sabay — parehong naka-encrypt gamit ang Token Passphrase sa itaas, sa parehong GitHub file, sa ilalim ng key na "adminConfigBackup". Ito yung EKSAKTONG parehong format at key na ginagamit ng "BACKUP SETTINGS TO GITHUB" / "RESTORE SETTINGS FROM GITHUB" sa app mismo -- kaya ang backup na ginawa dito sa site ay ma-re-restore sa app, at ang backup na ginawa sa app ay ma-re-restore dito sa site, gamit lang ang parehong passphrase.</div>
-  <div class="row" style="margin-top:10px;">
-    <div><button type="button" id="backupAllBtn" class="secondary">💾 Backup LAHAT ng Credentials sa GitHub</button></div>
-    <div><button type="button" id="restoreAllBtn" class="secondary">📥 Restore LAHAT ng Credentials mula sa GitHub</button></div>
-  </div>
-  <div class="hint">Backup: kukunin ang totoong (naka-decrypt) na Token, ang GitHub Owner/Repo/Path, AT ang VPS IP/Port/User/Pass/Days/Enabled fields, ibabalot sa isang JSON tulad ng app, i-e-encrypt gamit ang Token Passphrase, tapos isang commit lang ang gagawin sa GitHub para sa lahat. Restore: ide-decrypt agad ang lahat pabalik sa mga input sa itaas -- kasama ang totoong (plain) na token sa Token field, hindi na naka-encrypt na blob.</div>
-
-  <div class="row" style="display:none;">
-    <div>
-      <label for="owner">Owner / Username</label>
-      <input type="password" autocomplete="off" id="owner" value="noelrubio143" placeholder="hal. yourusername" />
-    </div>
-    <div>
-      <label for="repo">Repository</label>
-      <input type="password" autocomplete="off" id="repo" value="myvpnnew" placeholder="hal. your-repo" />
-    </div>
-  </div>
-
-  <div class="row">
-    <div>
-      <label for="branch">Branch</label>
-      <input type="password" autocomplete="off" id="branch" value="main" />
-    </div>
-  </div>
-
-  <div id="status"></div>
+  <ul id="notesList"></ul>
 </div>
 
 <script>
-const $ = (id) => document.getElementById(id);
-const statusEl = $('status');
+const $ = id => document.getElementById(id);
+const listEl = $('notesList');
+const inputEl = $('noteInput');
 
-function showStatus(message, isError) {
-  statusEl.className = isError ? 'err' : 'ok';
-  statusEl.textContent = message;
-}
-
-// ============================================================
-// Remember non-sensitive connection fields (Owner/Repo/Branch/Path) across
-// reloads using localStorage. Token and Passphrase are deliberately NEVER
-// persisted here for security.
-// ============================================================
-const PERSIST_IDS = ['branch'];
-const PERSIST_KEY = 'ghSyncAdminFields';
-
-function loadPersistedFields() {
+function loadNotes() {
   try {
-    const saved = JSON.parse(localStorage.getItem(PERSIST_KEY) || '{}');
-    PERSIST_IDS.forEach(id => {
-      if (saved[id] !== undefined && saved[id] !== '') {
-        $(id).value = saved[id];
-      }
-    });
-  } catch (e) { /* ignore corrupt/missing storage */ }
-}
-
-function persistFields() {
-  const data = {};
-  PERSIST_IDS.forEach(id => { data[id] = $(id).value.trim(); });
-  try { localStorage.setItem(PERSIST_KEY, JSON.stringify(data)); } catch (e) { /* ignore quota/errors */ }
-}
-
-loadPersistedFields();
-PERSIST_IDS.forEach(id => {
-  $(id).addEventListener('input', persistFields);
-});
-
-// ============================================================
-// AES-256-GCM / PBKDF2 helpers (used for token encryption AND admin backup)
-// ============================================================
-const KDF_ITERATIONS = 120000;
-const KEY_LENGTH_BITS = 256;
-const SALT_LENGTH_BYTES = 16;
-const IV_LENGTH_BYTES = 12;
-
-function bytesToB64(bytes) {
-  let bin = '';
-  bytes.forEach(b => bin += String.fromCharCode(b));
-  return btoa(bin);
-}
-function b64ToBytes(b64) {
-  const bin = atob(b64.trim());
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
-}
-
-async function deriveAesKey(passphrase, salt) {
-  const enc = new TextEncoder();
-  const baseKey = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: KDF_ITERATIONS, hash: 'SHA-256' },
-    baseKey,
-    { name: 'AES-GCM', length: KEY_LENGTH_BITS },
-    false,
-    ['encrypt', 'decrypt']
-  );
-}
-
-async function encryptWithPassphrase(plainText, passphrase) {
-  const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH_BYTES));
-  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH_BYTES));
-  const key = await deriveAesKey(passphrase, salt);
-  const enc = new TextEncoder();
-  const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plainText));
-  const cipherBytes = new Uint8Array(cipherBuf);
-  const packed = new Uint8Array(salt.length + iv.length + cipherBytes.length);
-  packed.set(salt, 0);
-  packed.set(iv, salt.length);
-  packed.set(cipherBytes, salt.length + iv.length);
-  return bytesToB64(packed);
-}
-
-async function decryptWithPassphrase(encoded, passphrase) {
-  const packed = b64ToBytes(encoded);
-  if (packed.length < SALT_LENGTH_BYTES + IV_LENGTH_BYTES + 1) {
-    throw new Error('Hindi valid na encrypted value.');
-  }
-  const salt = packed.slice(0, SALT_LENGTH_BYTES);
-  const iv = packed.slice(SALT_LENGTH_BYTES, SALT_LENGTH_BYTES + IV_LENGTH_BYTES);
-  const cipherBytes = packed.slice(SALT_LENGTH_BYTES + IV_LENGTH_BYTES);
-  const key = await deriveAesKey(passphrase, salt);
-  const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipherBytes);
-  return new TextDecoder().decode(plainBuf);
-}
-
-// A raw GitHub PAT always starts with one of these prefixes — if the token
-// field does NOT start this way, we treat it as an encrypted blob and try
-// to decrypt it using the Token Passphrase field.
-function looksLikeRawGithubToken(v) {
-  return /^(ghp_|github_pat_|gho_|ghu_|ghs_|ghr_)/.test(v);
-}
-
-async function ghConfig() {
-  const rawTokenField = $('token').value.trim();
-  const passphrase = $('tokenPassphrase').value;
-  let token = rawTokenField;
-  if (rawTokenField && !looksLikeRawGithubToken(rawTokenField)) {
-    if (!passphrase) {
-      throw new Error('Naka-encrypt yung laman ng Token field — ilagay muna ang Token Passphrase para ma-decrypt.');
-    }
-    try {
-      token = await decryptWithPassphrase(rawTokenField, passphrase);
-    } catch (e) {
-      throw new Error('Hindi ma-decrypt ang token — mali ang passphrase o sirang blob.');
-    }
-  }
-  return {
-    token,
-    owner: $('owner').value.trim(),
-    repo: $('repo').value.trim(),
-    branch: $('branch').value.trim() || 'main'
-  };
-}
-
-$('encryptTokenBtn').addEventListener('click', async () => {
-  const plain = $('token').value.trim();
-  const passphrase = $('tokenPassphrase').value;
-  if (!plain || !looksLikeRawGithubToken(plain)) {
-    showStatus('Ilagay muna ang totoong (plain) na GitHub token bago i-encrypt.', true);
-    return;
-  }
-  if (!passphrase) {
-    showStatus('Kailangan ng Token Passphrase.', true);
-    return;
-  }
-  const btn = $('encryptTokenBtn');
-  btn.disabled = true; btn.textContent = 'Encrypting...';
-  try {
-    const encrypted = await encryptWithPassphrase(plain, passphrase);
-    $('token').value = encrypted;
-    showStatus('✅ Na-encrypt na ang token sa field. Ligtas mo na itong i-save bilang default value sa file — ide-decrypt na lang ito automatic gamit ang passphrase tuwing gagamitin.', false);
-  } catch (err) {
-    showStatus(`❌ ${err.message}`, true);
-  } finally {
-    btn.disabled = false; btn.textContent = '🔒 I-encrypt ang Token';
-  }
-});
-
-// Like ghConfig(), but never throws just because the Token field is blank --
-// used only for READING (Restore), so an empty token falls through to an
-// anonymous GitHub API call, which works for a public repo. Writing
-// (Backup) always goes through the stricter ghConfig()/requireGhConfig(),
-// which does require a real, working token.
-async function ghConfigForRead() {
-  const rawTokenField = $('token').value.trim();
-  const passphrase = $('tokenPassphrase').value;
-  let token = '';
-  if (rawTokenField) {
-    if (looksLikeRawGithubToken(rawTokenField)) {
-      token = rawTokenField;
-    } else if (passphrase) {
-      try {
-        token = await decryptWithPassphrase(rawTokenField, passphrase);
-      } catch (e) {
-        throw new Error('Hindi ma-decrypt ang token — mali ang passphrase o sirang blob.');
-      }
-    }
-    // Naka-encrypt na blob pero walang passphrase: iwan na lang blangko ang
-    // token dito, susubukan na lang bilang anonymous/public read.
-  }
-  return {
-    token,
-    owner: $('owner').value.trim(),
-    repo: $('repo').value.trim(),
-    branch: $('branch').value.trim() || 'main'
-  };
-}
-
-$('backupTokenBtn').addEventListener('click', async () => {
-  const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
-  const cfg = await requireGhConfig(path);
-  if (!cfg) return;
-
-  const rawTokenField = $('token').value.trim();
-  const passphrase = $('tokenPassphrase').value;
-  let blobToStore;
-  if (looksLikeRawGithubToken(rawTokenField)) {
-    if (!passphrase) {
-      showStatus('Kailangan ng Token Passphrase para i-encrypt ang token bago i-store sa GitHub.', true);
-      return;
-    }
-    blobToStore = await encryptWithPassphrase(rawTokenField, passphrase);
-  } else {
-    blobToStore = rawTokenField; // naka-encrypt na
-  }
-  if (!blobToStore) {
-    showStatus('Walang laman ang Token field.', true);
-    return;
-  }
-
-  const btn = $('backupTokenBtn');
-  btn.disabled = true; btn.textContent = 'Backing up...'; statusEl.className = '';
-  try {
-    const { root, sha, url } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
-    root.tokenBackup = blobToStore;
-    await writeSyncFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted token backup');
-    showStatus('✅ Na-backup ang naka-encrypt na token sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
-  } catch (err) {
-    showStatus(`❌ ${err.message}`, true);
-  } finally {
-    btn.disabled = false; btn.textContent = '⬆️ Backup Token to GitHub';
-  }
-});
-
-$('restoreTokenBtn').addEventListener('click', async () => {
-  const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
-  const owner = $('owner').value.trim();
-  const repo = $('repo').value.trim();
-  if (!owner || !repo || !path) {
-    showStatus('Kailangan ng Owner, Repo, at Token Backup File path.', true);
-    return;
-  }
-  const btn = $('restoreTokenBtn');
-  btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
-  try {
-    const cfg = await ghConfigForRead();
-    const { root } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
-    if (!root.tokenBackup) {
-      showStatus('Walang naka-backup na token sa GitHub file na ito.', true);
-      return;
-    }
-    $('token').value = root.tokenBackup;
-    showStatus('✅ Na-restore ang naka-encrypt na token mula sa GitHub. Ilagay ang parehong Token Passphrase sa itaas para magamit ito.', false);
-  } catch (err) {
-    showStatus(`❌ ${err.message}`, true);
-  } finally {
-    btn.disabled = false; btn.textContent = '⬇️ Restore Token from GitHub';
-  }
-});
-
-const VPS_BACKUP_PATH = 'token'; // parehong file gaya ng token backup, ibang key lang ("vpsBackup")
-
-function readVpsFieldsFromForm() {
-  return {
-    host: $('vpsHost').value.trim(),
-    port: parseInt($('vpsPort').value.trim(), 10) || 22,
-    user: $('vpsUser').value.trim() || 'root',
-    pass: $('vpsPass').value,
-    enabled: $('vpsEnabled').checked,
-    sshDefaultDays: parseInt($('vpsSshDays').value.trim(), 10) || 30,
-    vlessDefaultDays: parseInt($('vpsVlessDays').value.trim(), 10) || 30
-  };
-}
-
-function writeVpsFieldsToForm(vps) {
-  $('vpsHost').value = vps.host || '';
-  $('vpsPort').value = vps.port || 22;
-  $('vpsUser').value = vps.user || 'root';
-  $('vpsPass').value = vps.pass || '';
-  $('vpsEnabled').checked = !!vps.enabled;
-  $('vpsSshDays').value = vps.sshDefaultDays || 30;
-  $('vpsVlessDays').value = vps.vlessDefaultDays || 30;
-}
-
-$('backupVpsBtn').addEventListener('click', async () => {
-  const cfg = await requireGhConfig(VPS_BACKUP_PATH);
-  if (!cfg) return;
-  const passphrase = $('tokenPassphrase').value;
-  if (!passphrase) {
-    showStatus('Kailangan ng Token Passphrase para i-encrypt ang VPS settings bago i-store sa GitHub.', true);
-    return;
-  }
-  const btn = $('backupVpsBtn');
-  btn.disabled = true; btn.textContent = 'Backing up...'; statusEl.className = '';
-  try {
-    const vpsJson = JSON.stringify(readVpsFieldsFromForm());
-    const encrypted = await encryptWithPassphrase(vpsJson, passphrase);
-    const { root, sha, url } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, VPS_BACKUP_PATH, cfg.token);
-    root.vpsBackup = encrypted;
-    await writeSyncFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted VPS settings backup');
-    showStatus('✅ Na-backup ang naka-encrypt na VPS settings sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
-  } catch (err) {
-    showStatus(`❌ ${err.message}`, true);
-  } finally {
-    btn.disabled = false; btn.textContent = '⬆️ Backup VPS Settings to GitHub';
-  }
-});
-
-$('restoreVpsBtn').addEventListener('click', async () => {
-  const owner = $('owner').value.trim();
-  const repo = $('repo').value.trim();
-  if (!owner || !repo) {
-    showStatus('Kailangan ng Owner at Repo.', true);
-    return;
-  }
-  const passphrase = $('tokenPassphrase').value;
-  if (!passphrase) {
-    showStatus('Kailangan ng Token Passphrase para ma-decrypt ang VPS settings.', true);
-    return;
-  }
-  const btn = $('restoreVpsBtn');
-  btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
-  try {
-    const cfg = await ghConfigForRead();
-    const { root } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, VPS_BACKUP_PATH, cfg.token);
-    if (!root.vpsBackup) {
-      showStatus('Walang naka-backup na VPS settings sa GitHub file na ito.', true);
-      return;
-    }
-    const decrypted = await decryptWithPassphrase(root.vpsBackup, passphrase);
-    writeVpsFieldsToForm(JSON.parse(decrypted));
-    showStatus('✅ Na-restore ang VPS settings mula sa GitHub.', false);
-  } catch (err) {
-    showStatus(`❌ Hindi ma-decrypt/ma-restore — mali ang passphrase o sirang blob. (${err.message})`, true);
-  } finally {
-    btn.disabled = false; btn.textContent = '⬇️ Restore VPS Settings from GitHub';
-  }
-});
-
-// Same JSON shape the Android app's SettingsBackupUtil.buildSnapshot() writes
-// (backupVersion / vpsSelfService / githubSync), and the same GitHub key
-// ("adminConfigBackup") that GitHubConfigPublisher.publishAdminBackup /
-// fetchAdminBackup read and write. Keeping this identical is what lets a
-// backup made on the phone restore here, and a backup made here restore on
-// the phone -- same passphrase, same AES-256-GCM/PBKDF2 parameters on both
-// sides.
-const ADMIN_BACKUP_KEY = 'adminConfigBackup';
-
-$('backupAllBtn').addEventListener('click', async () => {
-  const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
-  const cfg = await requireGhConfig(path); // cfg.token is the real, decrypted token
-  if (!cfg) return;
-  const passphrase = $('tokenPassphrase').value;
-  if (!passphrase) {
-    showStatus('Kailangan ng Token Passphrase para i-encrypt ang lahat ng credentials.', true);
-    return;
-  }
-  const btn = $('backupAllBtn');
-  btn.disabled = true; btn.textContent = 'Backing up...'; statusEl.className = '';
-  try {
-    const snapshot = {
-      backupVersion: 1,
-      vpsSelfService: readVpsFieldsFromForm(),
-      githubSync: {
-        owner: cfg.owner,
-        repo: cfg.repo,
-        path: path,
-        token: cfg.token,
-        autoPublish: false
-      }
-    };
-    const encrypted = await encryptWithPassphrase(JSON.stringify(snapshot), passphrase);
-    const { root, sha, url } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
-    root[ADMIN_BACKUP_KEY] = encrypted;
-    await writeSyncFile(url, cfg.token, cfg.branch, root, sha, 'Update admin settings backup');
-    showStatus('✅ Na-backup lahat ng credentials sa GitHub -- pareho ang format sa app, ma-re-restore parehong dako.', false);
-  } catch (err) {
-    showStatus(`❌ ${err.message}`, true);
-  } finally {
-    btn.disabled = false; btn.textContent = '💾 Backup LAHAT ng Credentials sa GitHub';
-  }
-});
-
-$('restoreAllBtn').addEventListener('click', async () => {
-  const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
-  const owner = $('owner').value.trim();
-  const repo = $('repo').value.trim();
-  if (!owner || !repo || !path) {
-    showStatus('Kailangan ng Owner, Repo, at Backup File path.', true);
-    return;
-  }
-  const passphrase = $('tokenPassphrase').value;
-  if (!passphrase) {
-    showStatus('Kailangan ng Token Passphrase para ma-decrypt ang lahat ng credentials.', true);
-    return;
-  }
-  const btn = $('restoreAllBtn');
-  btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
-  try {
-    const cfg = await ghConfigForRead();
-    const { root } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
-    if (!root[ADMIN_BACKUP_KEY]) {
-      showStatus('Walang naka-backup na credentials sa GitHub file na ito.', true);
-      return;
-    }
-    const decrypted = await decryptWithPassphrase(root[ADMIN_BACKUP_KEY], passphrase);
-    const snapshot = JSON.parse(decrypted);
-    if (snapshot.vpsSelfService) writeVpsFieldsToForm(snapshot.vpsSelfService);
-    if (snapshot.githubSync) {
-      if (snapshot.githubSync.owner) $('owner').value = snapshot.githubSync.owner;
-      if (snapshot.githubSync.repo) $('repo').value = snapshot.githubSync.repo;
-      if (snapshot.githubSync.token) $('token').value = snapshot.githubSync.token;
-    }
-    showStatus('✅ Na-restore lahat ng credentials mula sa GitHub (parehong laman gamit rin sa app).', false);
-  } catch (err) {
-    showStatus(`❌ Hindi ma-decrypt/ma-restore — mali ang passphrase o sirang blob. (${err.message})`, true);
-  } finally {
-    btn.disabled = false; btn.textContent = '📥 Restore LAHAT ng Credentials mula sa GitHub';
-  }
-});
-
-$('copyTokenBtn').addEventListener('click', async () => {
-  const val = $('token').value.trim();
-  if (!val) {
-    showStatus('Walang laman ang Token field na kokopyahin.', true);
-    return;
-  }
-  const btn = $('copyTokenBtn');
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(val);
-    } else {
-      // Fallback para sa mas lumang browser / non-secure context
-      const tmp = document.createElement('textarea');
-      tmp.value = val;
-      tmp.style.position = 'fixed';
-      tmp.style.opacity = '0';
-      document.body.appendChild(tmp);
-      tmp.focus();
-      tmp.select();
-      document.execCommand('copy');
-      document.body.removeChild(tmp);
-    }
-    const original = btn.textContent;
-    btn.textContent = '✅ Nakopya!';
-    showStatus(looksLikeRawGithubToken(val)
-      ? '✅ Nakopya sa clipboard ang RAW token — ito ay plain text, mag-ingat kung saan i-paste.'
-      : '✅ Nakopya sa clipboard ang naka-encrypt/naka-mask na token blob.', false);
-    setTimeout(() => { btn.textContent = original; }, 1500);
-  } catch (err) {
-    showStatus(`❌ Hindi na-copy: ${err.message}`, true);
-  }
-});
-
-function apiHeaders(token) {
-  const headers = {
-    'Accept': 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28'
-  };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
-}
-
-function apiUrl(owner, repo, path) {
-  return `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`;
-}
-
-// UTF-8 safe base64 encode/decode
-function b64EncodeUtf8(str) {
-  return btoa(unescape(encodeURIComponent(str)));
-}
-function b64DecodeUtf8(b64) {
-  return decodeURIComponent(escape(atob(b64.replace(/\n/g, ''))));
-}
-
-// ============================================================
-// Shared GitHub file read/write helpers (used by Admin Backup and Token Backup)
-// ============================================================
-
-/** Reads the JSON file, returns {root, sha}. root defaults to {} if missing. */
-async function readSyncFile(owner, repo, branch, path, token) {
-  const headers = apiHeaders(token);
-  const url = apiUrl(owner, repo, path);
-  const res = await fetch(`${url}?ref=${encodeURIComponent(branch)}`, { headers });
-  if (res.status === 404) {
-    return { root: {}, sha: undefined, url };
-  }
-  if (!res.ok) {
-    const errBody = await res.json().catch(() => ({}));
-    throw new Error(`GitHub read failed (${res.status}): ${errBody.message || res.statusText}`);
-  }
-  const fileMeta = await res.json();
-  const decoded = fileMeta.content ? b64DecodeUtf8(fileMeta.content) : '{}';
-  let root;
-  try { root = JSON.parse(decoded || '{}'); } catch (e) { root = {}; }
-  return { root, sha: fileMeta.sha, url };
-}
-
-async function writeSyncFile(url, token, branch, root, sha, commitMessage) {
-  const headers = apiHeaders(token);
-  const putRes = await fetch(url, {
-    method: 'PUT',
-    headers: { ...headers, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: commitMessage,
-      content: b64EncodeUtf8(JSON.stringify(root, null, 2)),
-      branch,
-      ...(sha ? { sha } : {})
-    })
-  });
-  const putBody = await putRes.json();
-  if (!putRes.ok) throw new Error(`GitHub commit failed (${putRes.status}): ${putBody.message || putRes.statusText}`);
-  return putBody;
-}
-
-async function requireGhConfig(path) {
-  let cfg;
-  try {
-    cfg = await ghConfig();
+    return JSON.parse(localStorage.getItem('notes') || '[]');
   } catch (e) {
-    showStatus(`❌ ${e.message}`, true);
-    return null;
+    return [];
   }
-  if (!cfg.token || !cfg.owner || !cfg.repo || !path) {
-    showStatus('Kailangan mo munang lagyan ng token, owner, repo, at file path.', true);
-    return null;
-  }
-  return cfg;
 }
+
+function saveNotes(notes) {
+  localStorage.setItem('notes', JSON.stringify(notes));
+}
+
+function render() {
+  const notes = loadNotes();
+  listEl.innerHTML = '';
+  if (notes.length === 0) {
+    listEl.innerHTML = '<div class="empty">Wala pang note. Magdagdag sa itaas.</div>';
+    return;
+  }
+  notes.slice().reverse().forEach(note => {
+    const li = document.createElement('li');
+    const date = new Date(note.created).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
+    li.innerHTML = `
+      <div>
+        <div class="note-text"></div>
+        <div class="note-date">${date}</div>
+      </div>
+      <button type="button" class="del">🗑️</button>
+    `;
+    li.querySelector('.note-text').textContent = note.text;
+    li.querySelector('.del').addEventListener('click', () => {
+      const remaining = loadNotes().filter(n => n.id !== note.id);
+      saveNotes(remaining);
+      render();
+    });
+    listEl.appendChild(li);
+  });
+}
+
+$('addBtn').addEventListener('click', () => {
+  const text = inputEl.value.trim();
+  if (!text) return;
+  const notes = loadNotes();
+  notes.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2), text, created: Date.now() });
+  saveNotes(notes);
+  inputEl.value = '';
+  render();
+});
+
+$('deleteAllBtn').addEventListener('click', () => {
+  if (loadNotes().length === 0) return;
+  if (confirm('Sigurado ka bang burahin LAHAT ng notes? Hindi na ito mababawi.')) {
+    saveNotes([]);
+    render();
+  }
+});
+
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    $('addBtn').click();
+  }
+});
+
+render();
 </script>
 </body>
 </html>
