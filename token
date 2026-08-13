@@ -9,6 +9,12 @@
       "username": "t",
       "password": "t",
       "enabled": true
+    },
+    {
+      "label": "Free VLESS - test",
+      "serverType": "v2ray",
+      "v2rayLink": "vless:\/\/5c25be68-b704-4fd2-9100-be655a93ab3b@ph.ambersvpn.shop:443?path=\/vless&security=tls&encryption=none&type=ws#test",
+      "enabled": true
     }
   ],
   "tokenBackup": "8J7Ny9UbpPmF1Hxk9OjPYYvYF7NlSrsUq1FxU5aTslXsD5cUnJl25ypVmBh4Dl6P\/KmoPVPladX\/I+WDn1Wz\/Mze68a2ku5RJrjThf5Zi+EqQBeaA19MZGjYucWQ+cLYR8NYL4W7JxzHaehyqXm+UouNnK6fR+GuEFADz4xHG82QopQ3kJPTF7s=",
