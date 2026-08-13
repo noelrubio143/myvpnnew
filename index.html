@@ -155,7 +155,7 @@
 <body>
 <div class="card">
   <h1>GitHub Sync — Admin Tool</h1>
-  <div class="subtitle">Central na admin tool para sa lahat ng GitHub-based na pag-sync — file publishing, community server list, at admin settings backup. Ito na lang ang gamitin, hindi na naka-built-in sa app mismo.</div>
+  <div class="subtitle">Central na admin tool para sa GitHub-based na pag-sync ng token at VPS admin settings backup. Ito na lang ang gamitin, hindi na naka-built-in sa app mismo.</div>
 
   <div class="warning">
     ⚠️ Ang token ay ginagamit lang sa browser session mo — hindi ito naise-save o nagpapadala kahit saan maliban sa api.github.com. Isara ang tab na ito pagkatapos gamitin kung shared o public na computer. Gumamit ng fine-grained PAT na naka-limit lang sa isang repo, "Contents: Read and write" lang.
@@ -182,7 +182,7 @@
     <div><button type="button" id="copyTokenBtn" class="secondary">📋 Copy Token (naka-mask/encrypted)</button></div>
   </div>
   <div class="hint">Kokopyahin ang laman ng Token field kung ano man ang nakalagay dito ngayon (naka-encrypt na blob kadalasan pagkatapos mag-restore) — hindi ito ide-decrypt, direktang kopya lang ito papunta sa clipboard mo.</div>
-  <div class="hint">Ise-save ang naka-encrypt na token (gamit ang Token Passphrase sa itaas) sa parehong GitHub file, sa ilalim ng sarili nitong key — hindi ito nakikita sa "servers" list. Sa ibang browser/device, i-restore mo lang gamit ang parehong Owner/Repo/Path + Token Passphrase (token mismo hindi na kailangan kung public ang repo) — hindi mo na kailangang kopyahin nang manual ang buong encrypted blob.</div>
+  <div class="hint">Ise-save ang naka-encrypt na token (gamit ang Token Passphrase sa itaas) sa parehong GitHub file, sa ilalim ng sarili nitong key. Sa ibang browser/device, i-restore mo lang gamit ang parehong Owner/Repo/Path + Token Passphrase (token mismo hindi na kailangan kung public ang repo) — hindi mo na kailangang kopyahin nang manual ang buong encrypted blob.</div>
 
   <h2 style="margin-top:24px;">VPS Self-Service Settings</h2>
   <div class="section-note">Ito yung parehong VPS root login + self-service settings na nasa app (VPS Self-Service section). Naka-encrypt (gamit ang Token Passphrase sa itaas) bago i-store sa GitHub file — sarili nitong key din, hiwalay sa token at sa server list.</div>
@@ -226,7 +226,7 @@
     <div><button type="button" id="backupVpsBtn" class="secondary">⬆️ Backup VPS Settings to GitHub</button></div>
     <div><button type="button" id="restoreVpsBtn" class="secondary">⬇️ Restore VPS Settings from GitHub</button></div>
   </div>
-  <div class="hint">Kailangan ng Token Passphrase sa itaas para ma-encrypt/ma-decrypt. Ise-save sa ilalim ng sariling "vpsBackup" key sa parehong GitHub file — hindi ito nakikita sa "servers" list, at hiwalay ito sa Token Backup at sa buong Admin Settings Backup (kung meron man).</div>
+  <div class="hint">Kailangan ng Token Passphrase sa itaas para ma-encrypt/ma-decrypt. Ise-save sa ilalim ng sariling "vpsBackup" key sa parehong GitHub file, hiwalay sa Token Backup.</div>
 
   <h2 style="margin-top:24px;">🔐 Backup / Restore LAHAT ng Credentials</h2>
   <div class="section-note">Isang pindot lang para ma-imbak (o mabalik) ang Token AT VPS settings nang sabay — parehong naka-encrypt gamit ang Token Passphrase sa itaas, sa parehong GitHub file.</div>
@@ -463,9 +463,9 @@ $('backupTokenBtn').addEventListener('click', async () => {
   const btn = $('backupTokenBtn');
   btn.disabled = true; btn.textContent = 'Backing up...'; statusEl.className = '';
   try {
-    const { root, sha, url } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
+    const { root, sha, url } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
     root.tokenBackup = blobToStore;
-    await writeCommunityFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted token backup');
+    await writeSyncFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted token backup');
     showStatus('✅ Na-backup ang naka-encrypt na token sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
   } catch (err) {
     showStatus(`❌ ${err.message}`, true);
@@ -486,7 +486,7 @@ $('restoreTokenBtn').addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
   try {
     const cfg = await ghConfigForRead();
-    const { root } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
+    const { root } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
     if (!root.tokenBackup) {
       showStatus('Walang naka-backup na token sa GitHub file na ito.', true);
       return;
@@ -537,9 +537,9 @@ $('backupVpsBtn').addEventListener('click', async () => {
   try {
     const vpsJson = JSON.stringify(readVpsFieldsFromForm());
     const encrypted = await encryptWithPassphrase(vpsJson, passphrase);
-    const { root, sha, url } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, VPS_BACKUP_PATH, cfg.token);
+    const { root, sha, url } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, VPS_BACKUP_PATH, cfg.token);
     root.vpsBackup = encrypted;
-    await writeCommunityFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted VPS settings backup');
+    await writeSyncFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted VPS settings backup');
     showStatus('✅ Na-backup ang naka-encrypt na VPS settings sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
   } catch (err) {
     showStatus(`❌ ${err.message}`, true);
@@ -564,7 +564,7 @@ $('restoreVpsBtn').addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
   try {
     const cfg = await ghConfigForRead();
-    const { root } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, VPS_BACKUP_PATH, cfg.token);
+    const { root } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, VPS_BACKUP_PATH, cfg.token);
     if (!root.vpsBackup) {
       showStatus('Walang naka-backup na VPS settings sa GitHub file na ito.', true);
       return;
@@ -603,10 +603,10 @@ $('backupAllBtn').addEventListener('click', async () => {
   try {
     const vpsJson = JSON.stringify(readVpsFieldsFromForm());
     const vpsBlob = await encryptWithPassphrase(vpsJson, passphrase);
-    const { root, sha, url } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
+    const { root, sha, url } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
     root.tokenBackup = tokenBlob;
     root.vpsBackup = vpsBlob;
-    await writeCommunityFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted token + VPS backup');
+    await writeSyncFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted token + VPS backup');
     showStatus('✅ Na-backup lahat ng credentials (Token + VPS) sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
   } catch (err) {
     showStatus(`❌ ${err.message}`, true);
@@ -632,7 +632,7 @@ $('restoreAllBtn').addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
   try {
     const cfg = await ghConfigForRead();
-    const { root } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
+    const { root } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
     let restoredAny = false;
     if (root.tokenBackup) {
       $('token').value = root.tokenBackup;
@@ -713,13 +713,13 @@ function b64DecodeUtf8(b64) {
 // Shared GitHub file read/write helpers (used by Admin Backup and Token Backup)
 // ============================================================
 
-/** Reads the JSON file, returns {root, sha}. root defaults to {announcement:"", servers:[]} if missing. */
-async function readCommunityFile(owner, repo, branch, path, token) {
+/** Reads the JSON file, returns {root, sha}. root defaults to {} if missing. */
+async function readSyncFile(owner, repo, branch, path, token) {
   const headers = apiHeaders(token);
   const url = apiUrl(owner, repo, path);
   const res = await fetch(`${url}?ref=${encodeURIComponent(branch)}`, { headers });
   if (res.status === 404) {
-    return { root: { announcement: '', servers: [] }, sha: undefined, url };
+    return { root: {}, sha: undefined, url };
   }
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}));
@@ -729,12 +729,10 @@ async function readCommunityFile(owner, repo, branch, path, token) {
   const decoded = fileMeta.content ? b64DecodeUtf8(fileMeta.content) : '{}';
   let root;
   try { root = JSON.parse(decoded || '{}'); } catch (e) { root = {}; }
-  if (!root.announcement) root.announcement = '';
-  if (!Array.isArray(root.servers)) root.servers = [];
   return { root, sha: fileMeta.sha, url };
 }
 
-async function writeCommunityFile(url, token, branch, root, sha, commitMessage) {
+async function writeSyncFile(url, token, branch, root, sha, commitMessage) {
   const headers = apiHeaders(token);
   const putRes = await fetch(url, {
     method: 'PUT',
