@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitHub Sync — Admin Tool</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --accent: #2ea043;
+    --accent-hover: #3fb950;
+    --danger: #f85149;
+    --input-bg: #0d1117;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .card {
+    width: 100%;
+    max-width: 680px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 4px 0;
+  }
+  h2 {
+    font-size: 16px;
+    margin: 0 0 4px 0;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .warning {
+    background: #3d2b0f;
+    border: 1px solid #9e6a03;
+    color: #e3b341;
+    font-size: 12.5px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 14px 0 6px;
+  }
+  input, textarea, select {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  textarea {
+    min-height: 100px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    resize: vertical;
+  }
+  .row {
+    display: flex;
+    gap: 12px;
+  }
+  .row > div { flex: 1; }
+  textarea.masked {
+    -webkit-text-security: disc;
+    text-security: disc;
+  }
+  button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:disabled {
+    background: #21262d;
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  button.secondary {
+    background: #21262d;
+    border: 1px solid var(--border);
+  }
+  button.secondary:hover { background: #30363d; }
+  button.danger {
+    background: #3a1618;
+    border: 1px solid var(--danger);
+    color: #ffa198;
+  }
+  button.danger:hover { background: #4a1c1f; }
+  #status {
+    margin-top: 14px;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    display: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  #status.ok {
+    display: block;
+    background: #0d2818;
+    border: 1px solid #238636;
+    color: #7ee787;
+  }
+  #status.err {
+    display: block;
+    background: #2d1214;
+    border: 1px solid var(--danger);
+    color: #ffa198;
+  }
+  #status a { color: #7ee787; }
+  .hint {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .section-note {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>GitHub Sync — Admin Tool</h1>
+  <div class="subtitle">Central na admin tool para sa lahat ng GitHub-based na pag-sync — file publishing, community server list, at admin settings backup. Ito na lang ang gamitin, hindi na naka-built-in sa app mismo.</div>
+
+  <div class="warning">
+    ⚠️ Ang token ay ginagamit lang sa browser session mo — hindi ito naise-save o nagpapadala kahit saan maliban sa api.github.com. Isara ang tab na ito pagkatapos gamitin kung shared o public na computer. Gumamit ng fine-grained PAT na naka-limit lang sa isang repo, "Contents: Read and write" lang.
+  </div>
+
+  <label for="token">GitHub Personal Access Token (o naka-encrypt na token)</label>
+  <input type="password" id="token" value="" placeholder="github_pat_... o encrypted blob" autocomplete="off" />
+  <div class="hint">Settings → Developer settings → Fine-grained tokens → grant "Contents: Read and write" sa target repo lang.</div>
+
+  <label for="tokenPassphrase">Token Passphrase (para i-decrypt/i-encrypt ang token)</label>
+  <input type="password" id="tokenPassphrase" placeholder="passphrase mo" autocomplete="off" />
+  <button type="button" id="encryptTokenBtn" class="secondary">🔒 I-encrypt ang Token</button>
+  <div class="hint">1) I-paste ang totoong token sa taas. 2) Ilagay ang passphrase. 3) Pindutin ito — mapapalitan ng encrypted blob ang Token field, ligtas mo na 'yong i-save sa file. Ide-decrypt na lang ito automatic (gamit ang passphrase) tuwing gagamitin ang mga button sa ibaba.</div>
+
+  <div style="display:none;">
+    <label for="tokenBackupPath">Token Backup — File path (sa GitHub repo)</label>
+    <input type="password" autocomplete="off" id="tokenBackupPath" value="update" placeholder="hal. update" />
+  </div>
+  <div class="row">
+    <div><button type="button" id="backupTokenBtn" class="secondary">⬆️ Backup Token to GitHub</button></div>
+    <div><button type="button" id="restoreTokenBtn" class="secondary">⬇️ Restore Token from GitHub</button></div>
+  </div>
+  <div class="row">
+    <div><button type="button" id="copyTokenBtn" class="secondary">📋 Copy Token (naka-mask/encrypted)</button></div>
+  </div>
+  <div class="hint">Kokopyahin ang laman ng Token field kung ano man ang nakalagay dito ngayon (naka-encrypt na blob kadalasan pagkatapos mag-restore) — hindi ito ide-decrypt, direktang kopya lang ito papunta sa clipboard mo.</div>
+  <div class="hint">Ise-save ang naka-encrypt na token (gamit ang Token Passphrase sa itaas) sa parehong GitHub file, sa ilalim ng sarili nitong key — hindi ito nakikita sa "servers" list. Sa ibang browser/device, i-restore mo lang gamit ang parehong Owner/Repo/Path + Token Passphrase (token mismo hindi na kailangan kung public ang repo) — hindi mo na kailangang kopyahin nang manual ang buong encrypted blob.</div>
+
+  <div class="row" style="display:none;">
+    <div>
+      <label for="owner">Owner / Username</label>
+      <input type="password" autocomplete="off" id="owner" value="noelrubio143" placeholder="hal. yourusername" />
+    </div>
+    <div>
+      <label for="repo">Repository</label>
+      <input type="password" autocomplete="off" id="repo" value="myvpnnew" placeholder="hal. your-repo" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label for="branch">Branch</label>
+      <input type="password" autocomplete="off" id="branch" value="main" />
+    </div>
+  </div>
+
+  <div id="status"></div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const statusEl = $('status');
+
+function showStatus(message, isError) {
+  statusEl.className = isError ? 'err' : 'ok';
+  statusEl.textContent = message;
+}
+
+// ============================================================
+// Remember non-sensitive connection fields (Owner/Repo/Branch/Path) across
+// reloads using localStorage. Token and Passphrase are deliberately NEVER
+// persisted here for security.
+// ============================================================
+const PERSIST_IDS = ['branch'];
+const PERSIST_KEY = 'ghSyncAdminFields';
+
+function loadPersistedFields() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PERSIST_KEY) || '{}');
+    PERSIST_IDS.forEach(id => {
+      if (saved[id] !== undefined && saved[id] !== '') {
+        $(id).value = saved[id];
+      }
+    });
+  } catch (e) { /* ignore corrupt/missing storage */ }
+}
+
+function persistFields() {
+  const data = {};
+  PERSIST_IDS.forEach(id => { data[id] = $(id).value.trim(); });
+  try { localStorage.setItem(PERSIST_KEY, JSON.stringify(data)); } catch (e) { /* ignore quota/errors */ }
+}
+
+loadPersistedFields();
+PERSIST_IDS.forEach(id => {
+  $(id).addEventListener('input', persistFields);
+});
+
+// ============================================================
+// AES-256-GCM / PBKDF2 helpers (used for token encryption AND admin backup)
+// ============================================================
+const KDF_ITERATIONS = 120000;
+const KEY_LENGTH_BITS = 256;
+const SALT_LENGTH_BYTES = 16;
+const IV_LENGTH_BYTES = 12;
+
+function bytesToB64(bytes) {
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function b64ToBytes(b64) {
+  const bin = atob(b64.trim());
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function deriveAesKey(passphrase, salt) {
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: KDF_ITERATIONS, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: KEY_LENGTH_BITS },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptWithPassphrase(plainText, passphrase) {
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH_BYTES));
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH_BYTES));
+  const key = await deriveAesKey(passphrase, salt);
+  const enc = new TextEncoder();
+  const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plainText));
+  const cipherBytes = new Uint8Array(cipherBuf);
+  const packed = new Uint8Array(salt.length + iv.length + cipherBytes.length);
+  packed.set(salt, 0);
+  packed.set(iv, salt.length);
+  packed.set(cipherBytes, salt.length + iv.length);
+  return bytesToB64(packed);
+}
+
+async function decryptWithPassphrase(encoded, passphrase) {
+  const packed = b64ToBytes(encoded);
+  if (packed.length < SALT_LENGTH_BYTES + IV_LENGTH_BYTES + 1) {
+    throw new Error('Hindi valid na encrypted value.');
+  }
+  const salt = packed.slice(0, SALT_LENGTH_BYTES);
+  const iv = packed.slice(SALT_LENGTH_BYTES, SALT_LENGTH_BYTES + IV_LENGTH_BYTES);
+  const cipherBytes = packed.slice(SALT_LENGTH_BYTES + IV_LENGTH_BYTES);
+  const key = await deriveAesKey(passphrase, salt);
+  const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipherBytes);
+  return new TextDecoder().decode(plainBuf);
+}
+
+// A raw GitHub PAT always starts with one of these prefixes — if the token
+// field does NOT start this way, we treat it as an encrypted blob and try
+// to decrypt it using the Token Passphrase field.
+function looksLikeRawGithubToken(v) {
+  return /^(ghp_|github_pat_|gho_|ghu_|ghs_|ghr_)/.test(v);
+}
+
+async function ghConfig() {
+  const rawTokenField = $('token').value.trim();
+  const passphrase = $('tokenPassphrase').value;
+  let token = rawTokenField;
+  if (rawTokenField && !looksLikeRawGithubToken(rawTokenField)) {
+    if (!passphrase) {
+      throw new Error('Naka-encrypt yung laman ng Token field — ilagay muna ang Token Passphrase para ma-decrypt.');
+    }
+    try {
+      token = await decryptWithPassphrase(rawTokenField, passphrase);
+    } catch (e) {
+      throw new Error('Hindi ma-decrypt ang token — mali ang passphrase o sirang blob.');
+    }
+  }
+  return {
+    token,
+    owner: $('owner').value.trim(),
+    repo: $('repo').value.trim(),
+    branch: $('branch').value.trim() || 'main'
+  };
+}
+
+$('encryptTokenBtn').addEventListener('click', async () => {
+  const plain = $('token').value.trim();
+  const passphrase = $('tokenPassphrase').value;
+  if (!plain || !looksLikeRawGithubToken(plain)) {
+    showStatus('Ilagay muna ang totoong (plain) na GitHub token bago i-encrypt.', true);
+    return;
+  }
+  if (!passphrase) {
+    showStatus('Kailangan ng Token Passphrase.', true);
+    return;
+  }
+  const btn = $('encryptTokenBtn');
+  btn.disabled = true; btn.textContent = 'Encrypting...';
+  try {
+    const encrypted = await encryptWithPassphrase(plain, passphrase);
+    $('token').value = encrypted;
+    showStatus('✅ Na-encrypt na ang token sa field. Ligtas mo na itong i-save bilang default value sa file — ide-decrypt na lang ito automatic gamit ang passphrase tuwing gagamitin.', false);
+  } catch (err) {
+    showStatus(`❌ ${err.message}`, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '🔒 I-encrypt ang Token';
+  }
+});
+
+// Like ghConfig(), but never throws just because the Token field is blank --
+// used only for READING (Restore), so an empty token falls through to an
+// anonymous GitHub API call, which works for a public repo. Writing
+// (Backup) always goes through the stricter ghConfig()/requireGhConfig(),
+// which does require a real, working token.
+async function ghConfigForRead() {
+  const rawTokenField = $('token').value.trim();
+  const passphrase = $('tokenPassphrase').value;
+  let token = '';
+  if (rawTokenField) {
+    if (looksLikeRawGithubToken(rawTokenField)) {
+      token = rawTokenField;
+    } else if (passphrase) {
+      try {
+        token = await decryptWithPassphrase(rawTokenField, passphrase);
+      } catch (e) {
+        throw new Error('Hindi ma-decrypt ang token — mali ang passphrase o sirang blob.');
+      }
+    }
+    // Naka-encrypt na blob pero walang passphrase: iwan na lang blangko ang
+    // token dito, susubukan na lang bilang anonymous/public read.
+  }
+  return {
+    token,
+    owner: $('owner').value.trim(),
+    repo: $('repo').value.trim(),
+    branch: $('branch').value.trim() || 'main'
+  };
+}
+
+$('backupTokenBtn').addEventListener('click', async () => {
+  const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
+  const cfg = await requireGhConfig(path);
+  if (!cfg) return;
+
+  const rawTokenField = $('token').value.trim();
+  const passphrase = $('tokenPassphrase').value;
+  let blobToStore;
+  if (looksLikeRawGithubToken(rawTokenField)) {
+    if (!passphrase) {
+      showStatus('Kailangan ng Token Passphrase para i-encrypt ang token bago i-store sa GitHub.', true);
+      return;
+    }
+    blobToStore = await encryptWithPassphrase(rawTokenField, passphrase);
+  } else {
+    blobToStore = rawTokenField; // naka-encrypt na
+  }
+  if (!blobToStore) {
+    showStatus('Walang laman ang Token field.', true);
+    return;
+  }
+
+  const btn = $('backupTokenBtn');
+  btn.disabled = true; btn.textContent = 'Backing up...'; statusEl.className = '';
+  try {
+    const { root, sha, url } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
+    root.tokenBackup = blobToStore;
+    await writeCommunityFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted token backup');
+    showStatus('✅ Na-backup ang naka-encrypt na token sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
+  } catch (err) {
+    showStatus(`❌ ${err.message}`, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '⬆️ Backup Token to GitHub';
+  }
+});
+
+$('restoreTokenBtn').addEventListener('click', async () => {
+  const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
+  const owner = $('owner').value.trim();
+  const repo = $('repo').value.trim();
+  if (!owner || !repo || !path) {
+    showStatus('Kailangan ng Owner, Repo, at Token Backup File path.', true);
+    return;
+  }
+  const btn = $('restoreTokenBtn');
+  btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
+  try {
+    const cfg = await ghConfigForRead();
+    const { root } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
+    if (!root.tokenBackup) {
+      showStatus('Walang naka-backup na token sa GitHub file na ito.', true);
+      return;
+    }
+    $('token').value = root.tokenBackup;
+    showStatus('✅ Na-restore ang naka-encrypt na token mula sa GitHub. Ilagay ang parehong Token Passphrase sa itaas para magamit ito.', false);
+  } catch (err) {
+    showStatus(`❌ ${err.message}`, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '⬇️ Restore Token from GitHub';
+  }
+});
+
+$('copyTokenBtn').addEventListener('click', async () => {
+  const val = $('token').value.trim();
+  if (!val) {
+    showStatus('Walang laman ang Token field na kokopyahin.', true);
+    return;
+  }
+  const btn = $('copyTokenBtn');
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(val);
+    } else {
+      // Fallback para sa mas lumang browser / non-secure context
+      const tmp = document.createElement('textarea');
+      tmp.value = val;
+      tmp.style.position = 'fixed';
+      tmp.style.opacity = '0';
+      document.body.appendChild(tmp);
+      tmp.focus();
+      tmp.select();
+      document.execCommand('copy');
+      document.body.removeChild(tmp);
+    }
+    const original = btn.textContent;
+    btn.textContent = '✅ Nakopya!';
+    showStatus(looksLikeRawGithubToken(val)
+      ? '✅ Nakopya sa clipboard ang RAW token — ito ay plain text, mag-ingat kung saan i-paste.'
+      : '✅ Nakopya sa clipboard ang naka-encrypt/naka-mask na token blob.', false);
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  } catch (err) {
+    showStatus(`❌ Hindi na-copy: ${err.message}`, true);
+  }
+});
+
+function apiHeaders(token) {
+  const headers = {
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+function apiUrl(owner, repo, path) {
+  return `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`;
+}
+
+// UTF-8 safe base64 encode/decode
+function b64EncodeUtf8(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function b64DecodeUtf8(b64) {
+  return decodeURIComponent(escape(atob(b64.replace(/\n/g, ''))));
+}
+
+// ============================================================
+// Shared GitHub file read/write helpers (used by Admin Backup and Token Backup)
+// ============================================================
+
+/** Reads the JSON file, returns {root, sha}. root defaults to {announcement:"", servers:[]} if missing. */
+async function readCommunityFile(owner, repo, branch, path, token) {
+  const headers = apiHeaders(token);
+  const url = apiUrl(owner, repo, path);
+  const res = await fetch(`${url}?ref=${encodeURIComponent(branch)}`, { headers });
+  if (res.status === 404) {
+    return { root: { announcement: '', servers: [] }, sha: undefined, url };
+  }
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error(`GitHub read failed (${res.status}): ${errBody.message || res.statusText}`);
+  }
+  const fileMeta = await res.json();
+  const decoded = fileMeta.content ? b64DecodeUtf8(fileMeta.content) : '{}';
+  let root;
+  try { root = JSON.parse(decoded || '{}'); } catch (e) { root = {}; }
+  if (!root.announcement) root.announcement = '';
+  if (!Array.isArray(root.servers)) root.servers = [];
+  return { root, sha: fileMeta.sha, url };
+}
+
+async function writeCommunityFile(url, token, branch, root, sha, commitMessage) {
+  const headers = apiHeaders(token);
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: commitMessage,
+      content: b64EncodeUtf8(JSON.stringify(root, null, 2)),
+      branch,
+      ...(sha ? { sha } : {})
+    })
+  });
+  const putBody = await putRes.json();
+  if (!putRes.ok) throw new Error(`GitHub commit failed (${putRes.status}): ${putBody.message || putRes.statusText}`);
+  return putBody;
+}
+
+async function requireGhConfig(path) {
+  let cfg;
+  try {
+    cfg = await ghConfig();
+  } catch (e) {
+    showStatus(`❌ ${e.message}`, true);
+    return null;
+  }
+  if (!cfg.token || !cfg.owner || !cfg.repo || !path) {
+    showStatus('Kailangan mo munang lagyan ng token, owner, repo, at file path.', true);
+    return null;
+  }
+  return cfg;
+}
+</script>
+</body>
+</html>
