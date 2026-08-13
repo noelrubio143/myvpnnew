@@ -34,16 +34,18 @@
     border-radius: 12px;
     padding: 28px;
   }
-  h1 {
-    font-size: 20px;
-    margin: 0 0 4px 0;
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
   }
-  .subtitle {
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 20px;
-  }
-  textarea {
+  h1 { font-size: 20px; margin: 0 0 4px 0; }
+  h2 { font-size: 15px; margin: 0 0 4px 0; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  label { display: block; font-size: 12.5px; font-weight: 600; margin: 10px 0 5px; }
+  textarea, input[type="password"], input[type="text"] {
     width: 100%;
     background: var(--input-bg);
     border: 1px solid var(--border);
@@ -52,9 +54,8 @@
     border-radius: 6px;
     font-size: 14px;
     font-family: inherit;
-    min-height: 70px;
-    resize: vertical;
   }
+  textarea { min-height: 70px; resize: vertical; }
   button {
     margin-top: 12px;
     padding: 11px 16px;
@@ -67,14 +68,25 @@
     cursor: pointer;
   }
   button:hover { background: var(--accent-hover); }
-  button.danger {
-    background: #3a1618;
-    border: 1px solid var(--danger);
-    color: #ffa198;
-  }
+  button.danger { background: #3a1618; border: 1px solid var(--danger); color: #ffa198; }
   button.danger:hover { background: #4a1c1f; }
+  button.secondary { background: #21262d; border: 1px solid var(--border); }
+  button.secondary:hover { background: #30363d; }
+  button.admin-btn { margin: 0; padding: 7px 12px; font-size: 12.5px; flex-shrink: 0; }
   .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .btn-row button { flex: 1; }
+  #editArea, #adminUsersArea { display: none; }
+  .role-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #0d2818;
+    border: 1px solid #238636;
+    color: #7ee787;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
   #notesList {
     list-style: none;
     margin: 22px 0 0 0;
@@ -93,74 +105,261 @@
     align-items: flex-start;
     gap: 10px;
   }
-  #notesList .note-text {
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  #notesList .note-date {
-    color: var(--muted);
-    font-size: 11.5px;
-    margin-top: 4px;
-  }
+  #notesList .note-text { white-space: pre-wrap; word-break: break-word; font-size: 14px; line-height: 1.5; }
+  #notesList .note-date { color: var(--muted); font-size: 11.5px; margin-top: 4px; }
   #notesList button.del {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--danger);
-    padding: 6px 10px;
-    margin: 0;
-    font-size: 12px;
-    flex-shrink: 0;
+    background: transparent; border: 1px solid var(--border); color: var(--danger);
+    padding: 6px 10px; margin: 0; font-size: 12px; flex-shrink: 0; display: none;
   }
   #notesList button.del:hover { background: #2d1214; }
-  .empty {
-    color: var(--muted);
-    font-size: 13px;
-    text-align: center;
-    padding: 24px 0;
+  .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 24px 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  #clientAdminList { list-style: none; margin: 14px 0 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  #clientAdminList li {
+    background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;
   }
+  #clientAdminList button.del { display: inline-block; }
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    align-items: center; justify-content: center; padding: 20px; z-index: 10;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 100%; max-width: 340px; }
+  .modal h2 { margin-bottom: 4px; }
+  .modal .subtitle { margin-bottom: 14px; }
+  .modal-error { color: var(--danger); font-size: 12.5px; margin-top: 8px; min-height: 16px; }
+  .modal-btn-row { display: flex; gap: 8px; }
+  .modal-btn-row button { margin-top: 14px; }
 </style>
 </head>
 <body>
 
-<div class="card" id="app">
-  <h1>📝 Notes</h1>
-  <div class="subtitle">Maglagay ng note sa ibaba, pwede maraming notes. Naka-save automatic sa browser mo.</div>
+<div class="card">
+  <div class="top-row">
+    <h1>📝 Notes <span class="role-badge" id="roleBadge" style="display:none;"></span></h1>
+    <div class="btn-row" style="margin:0; flex:none;">
+      <button type="button" id="adminBtn" class="secondary admin-btn">⚙️ Admin Login</button>
+    </div>
+  </div>
+  <div class="subtitle" id="mainSubtitle">View-only mode. Mag-login para makapag-edit.</div>
 
-  <textarea id="noteInput" placeholder="Isulat ang note dito..."></textarea>
-  <div class="btn-row">
-    <button type="button" id="addBtn">➕ Idagdag ang Note</button>
-    <button type="button" id="deleteAllBtn" class="danger">🗑️ Burahin Lahat</button>
+  <div id="editArea">
+    <textarea id="noteInput" placeholder="Isulat ang note dito..."></textarea>
+    <div class="btn-row">
+      <button type="button" id="addBtn">➕ Idagdag ang Note</button>
+      <button type="button" id="deleteAllBtn" class="danger">🗑️ Burahin Lahat</button>
+    </div>
   </div>
 
   <ul id="notesList"></ul>
+
+  <div id="adminUsersArea">
+    <hr />
+    <h2>👥 Client Admins</h2>
+    <div class="subtitle" style="margin-bottom:6px;">Ikaw lang bilang main admin ang pwedeng gumawa ng client admin accounts.</div>
+    <label for="newAdminUser">Username</label>
+    <input type="text" id="newAdminUser" autocomplete="off" placeholder="hal. client1" />
+    <label for="newAdminPass">Password</label>
+    <input type="text" id="newAdminPass" autocomplete="off" placeholder="password" />
+    <button type="button" id="addClientAdminBtn" class="secondary">➕ Gumawa ng Client Admin</button>
+    <ul id="clientAdminList"></ul>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <h2>Admin Login</h2>
+    <div class="subtitle">Ilagay ang username at password para makapag-edit.</div>
+    <label for="loginUser">Username</label>
+    <input type="text" id="loginUser" autocomplete="off" />
+    <label for="loginPass">Password</label>
+    <input type="password" id="loginPass" autocomplete="off" />
+    <div class="modal-error" id="modalError"></div>
+    <div class="modal-btn-row">
+      <button type="button" id="modalCancelBtn" class="secondary" style="flex:1;">Cancel</button>
+      <button type="button" id="modalSubmitBtn" style="flex:1;">Login</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
 const listEl = $('notesList');
 const inputEl = $('noteInput');
+const editArea = $('editArea');
+const adminUsersArea = $('adminUsersArea');
+const mainSubtitle = $('mainSubtitle');
+const roleBadge = $('roleBadge');
+const adminModal = $('adminModal');
+const loginUser = $('loginUser');
+const loginPass = $('loginPass');
+const modalError = $('modalError');
 
-function loadNotes() {
-  try {
-    return JSON.parse(localStorage.getItem('notes') || '[]');
-  } catch (e) {
-    return [];
+// Fixed main admin credentials (client-side only — see note in chat re: this
+// is not real security, just a simple gate for a personal tool).
+const MAIN_ADMIN_USER = 'ambervpn';
+const MAIN_ADMIN_PASS = '@Noelrubio12011990';
+
+let currentRole = null; // null | 'main' | 'client'
+let currentUser = null;
+
+function simpleHash(text) {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
   }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
 }
 
-function saveNotes(notes) {
-  localStorage.setItem('notes', JSON.stringify(notes));
+function loadClientAdmins() {
+  try { return JSON.parse(localStorage.getItem('clientAdmins') || '[]'); }
+  catch (e) { return []; }
 }
+function saveClientAdmins(list) {
+  localStorage.setItem('clientAdmins', JSON.stringify(list));
+}
+
+function setLoggedInUI(role, username) {
+  currentRole = role;
+  currentUser = username;
+  const active = !!role;
+  editArea.style.display = active ? 'block' : 'none';
+  adminUsersArea.style.display = (role === 'main') ? 'block' : 'none';
+  document.querySelectorAll('#notesList button.del').forEach(b => b.style.display = active ? 'inline-block' : 'none');
+
+  if (role === 'main') {
+    roleBadge.style.display = 'inline-block';
+    roleBadge.textContent = 'Main Admin';
+    mainSubtitle.textContent = `Naka-login bilang main admin (${username}). Pwede kang mag-edit at maglagay ng client admins.`;
+  } else if (role === 'client') {
+    roleBadge.style.display = 'inline-block';
+    roleBadge.textContent = 'Client Admin';
+    mainSubtitle.textContent = `Naka-login bilang client admin (${username}). Pwede kang mag-add/delete ng notes.`;
+  } else {
+    roleBadge.style.display = 'none';
+    mainSubtitle.textContent = 'View-only mode. Mag-login para makapag-edit.';
+  }
+  $('adminBtn').textContent = active ? '🚪 Logout' : '⚙️ Admin Login';
+  if (role === 'main') renderClientAdmins();
+  render();
+}
+
+$('adminBtn').addEventListener('click', () => {
+  if (currentRole) {
+    setLoggedInUI(null, null);
+    return;
+  }
+  openLoginModal();
+});
+
+function openLoginModal() {
+  loginUser.value = '';
+  loginPass.value = '';
+  modalError.textContent = '';
+  adminModal.classList.add('show');
+  setTimeout(() => loginUser.focus(), 50);
+}
+function closeLoginModal() { adminModal.classList.remove('show'); }
+
+$('modalCancelBtn').addEventListener('click', closeLoginModal);
+$('modalSubmitBtn').addEventListener('click', handleLogin);
+loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+function handleLogin() {
+  const u = loginUser.value.trim();
+  const p = loginPass.value;
+
+  if (u === MAIN_ADMIN_USER && p === MAIN_ADMIN_PASS) {
+    closeLoginModal();
+    setLoggedInUI('main', u);
+    return;
+  }
+
+  const clientAdmins = loadClientAdmins();
+  const match = clientAdmins.find(a => a.username === u && a.passHash === simpleHash(p));
+  if (match) {
+    closeLoginModal();
+    setLoggedInUI('client', u);
+    return;
+  }
+
+  modalError.textContent = 'Maling username o password.';
+  loginPass.value = '';
+  loginPass.focus();
+}
+
+// ---------- Client admin management (main admin only) ----------
+function renderClientAdmins() {
+  const list = loadClientAdmins();
+  const ul = $('clientAdminList');
+  ul.innerHTML = '';
+  if (list.length === 0) {
+    ul.innerHTML = '<div class="empty" style="padding:12px 0;">Wala pang client admin.</div>';
+    return;
+  }
+  list.forEach(a => {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.textContent = a.username;
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'del';
+    delBtn.textContent = '🗑️';
+    delBtn.addEventListener('click', () => {
+      const remaining = loadClientAdmins().filter(x => x.username !== a.username);
+      saveClientAdmins(remaining);
+      renderClientAdmins();
+    });
+    li.appendChild(span);
+    li.appendChild(delBtn);
+    ul.appendChild(li);
+  });
+}
+
+$('addClientAdminBtn').addEventListener('click', () => {
+  if (currentRole !== 'main') return;
+  const u = $('newAdminUser').value.trim();
+  const p = $('newAdminPass').value;
+  if (!u || !p) {
+    alert('Kailangan ng username at password.');
+    return;
+  }
+  if (u === MAIN_ADMIN_USER) {
+    alert('Hindi puwedeng gamitin ang username na ito.');
+    return;
+  }
+  const list = loadClientAdmins();
+  if (list.some(a => a.username === u)) {
+    alert('Meron nang client admin na may ganitong username.');
+    return;
+  }
+  list.push({ username: u, passHash: simpleHash(p) });
+  saveClientAdmins(list);
+  $('newAdminUser').value = '';
+  $('newAdminPass').value = '';
+  renderClientAdmins();
+});
+
+// ---------- Notes handling ----------
+function loadNotes() {
+  try { return JSON.parse(localStorage.getItem('notes') || '[]'); }
+  catch (e) { return []; }
+}
+function saveNotes(notes) { localStorage.setItem('notes', JSON.stringify(notes)); }
 
 function render() {
   const notes = loadNotes();
   listEl.innerHTML = '';
   if (notes.length === 0) {
-    listEl.innerHTML = '<div class="empty">Wala pang note. Magdagdag sa itaas.</div>';
+    listEl.innerHTML = '<div class="empty">Wala pang note.</div>';
     return;
   }
+  const active = !!currentRole;
   notes.slice().reverse().forEach(note => {
     const li = document.createElement('li');
     const date = new Date(note.created).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
@@ -172,7 +371,10 @@ function render() {
       <button type="button" class="del">🗑️</button>
     `;
     li.querySelector('.note-text').textContent = note.text;
-    li.querySelector('.del').addEventListener('click', () => {
+    const delBtn = li.querySelector('.del');
+    delBtn.style.display = active ? 'inline-block' : 'none';
+    delBtn.addEventListener('click', () => {
+      if (!currentRole) return;
       const remaining = loadNotes().filter(n => n.id !== note.id);
       saveNotes(remaining);
       render();
@@ -182,6 +384,7 @@ function render() {
 }
 
 $('addBtn').addEventListener('click', () => {
+  if (!currentRole) return;
   const text = inputEl.value.trim();
   if (!text) return;
   const notes = loadNotes();
@@ -192,6 +395,7 @@ $('addBtn').addEventListener('click', () => {
 });
 
 $('deleteAllBtn').addEventListener('click', () => {
+  if (!currentRole) return;
   if (loadNotes().length === 0) return;
   if (confirm('Sigurado ka bang burahin LAHAT ng notes? Hindi na ito mababawi.')) {
     saveNotes([]);
@@ -200,12 +404,10 @@ $('deleteAllBtn').addEventListener('click', () => {
 });
 
 inputEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-    $('addBtn').click();
-  }
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('addBtn').click();
 });
 
-render();
+setLoggedInUI(null, null);
 </script>
 </body>
 </html>
