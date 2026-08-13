@@ -184,6 +184,58 @@
   <div class="hint">Kokopyahin ang laman ng Token field kung ano man ang nakalagay dito ngayon (naka-encrypt na blob kadalasan pagkatapos mag-restore) — hindi ito ide-decrypt, direktang kopya lang ito papunta sa clipboard mo.</div>
   <div class="hint">Ise-save ang naka-encrypt na token (gamit ang Token Passphrase sa itaas) sa parehong GitHub file, sa ilalim ng sarili nitong key — hindi ito nakikita sa "servers" list. Sa ibang browser/device, i-restore mo lang gamit ang parehong Owner/Repo/Path + Token Passphrase (token mismo hindi na kailangan kung public ang repo) — hindi mo na kailangang kopyahin nang manual ang buong encrypted blob.</div>
 
+  <h2 style="margin-top:24px;">VPS Self-Service Settings</h2>
+  <div class="section-note">Ito yung parehong VPS root login + self-service settings na nasa app (VPS Self-Service section). Naka-encrypt (gamit ang Token Passphrase sa itaas) bago i-store sa GitHub file — sarili nitong key din, hiwalay sa token at sa server list.</div>
+
+  <div class="row" style="display:none;">
+    <div>
+      <label for="vpsHost">VPS IP</label>
+      <input type="password" autocomplete="off" id="vpsHost" value="47.80.83.157" placeholder="hal. 123.45.67.89" />
+    </div>
+    <div>
+      <label for="vpsPort">SSH Port</label>
+      <input type="password" autocomplete="off" id="vpsPort" value="22" placeholder="22" />
+    </div>
+  </div>
+  <div class="row" style="display:none;">
+    <div>
+      <label for="vpsUser">Root username</label>
+      <input type="password" autocomplete="off" id="vpsUser" value="root" />
+    </div>
+    <div>
+      <label for="vpsPass">Root password</label>
+      <input type="password" autocomplete="off" id="vpsPass" value="Noel1990" placeholder="VPS root password" />
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label for="vpsSshDays">Default SSH validity (days)</label>
+      <input type="password" autocomplete="off" id="vpsSshDays" value="30" />
+    </div>
+    <div>
+      <label for="vpsVlessDays">Default VLESS validity (days)</label>
+      <input type="password" autocomplete="off" id="vpsVlessDays" value="30" />
+    </div>
+  </div>
+  <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin-top:10px;">
+    <input type="checkbox" id="vpsEnabled" style="width:auto;" />
+    Allow app users to create their own SSH & VLESS accounts (self-service)
+  </label>
+
+  <div class="row" style="margin-top:14px;">
+    <div><button type="button" id="backupVpsBtn" class="secondary">⬆️ Backup VPS Settings to GitHub</button></div>
+    <div><button type="button" id="restoreVpsBtn" class="secondary">⬇️ Restore VPS Settings from GitHub</button></div>
+  </div>
+  <div class="hint">Kailangan ng Token Passphrase sa itaas para ma-encrypt/ma-decrypt. Ise-save sa ilalim ng sariling "vpsBackup" key sa parehong GitHub file — hindi ito nakikita sa "servers" list, at hiwalay ito sa Token Backup at sa buong Admin Settings Backup (kung meron man).</div>
+
+  <h2 style="margin-top:24px;">🔐 Backup / Restore LAHAT ng Credentials</h2>
+  <div class="section-note">Isang pindot lang para ma-imbak (o mabalik) ang Token AT VPS settings nang sabay — parehong naka-encrypt gamit ang Token Passphrase sa itaas, sa parehong GitHub file.</div>
+  <div class="row" style="margin-top:10px;">
+    <div><button type="button" id="backupAllBtn" class="secondary">💾 Backup LAHAT ng Credentials sa GitHub</button></div>
+    <div><button type="button" id="restoreAllBtn" class="secondary">📥 Restore LAHAT ng Credentials mula sa GitHub</button></div>
+  </div>
+  <div class="hint">Backup: kukunin ang laman ng Token field (i-e-encrypt kung plain pa) at ang VPS IP/Port/User/Pass/Days/Enabled fields, i-e-encrypt gamit ang Token Passphrase, tapos isang commit lang ang gagawin sa GitHub para sa dalawa. Restore: babalik ang naka-encrypt na token sa Token field (hindi awtomatikong ide-decrypt — gamitin na lang ito nang direkta), at ide-decrypt agad ang VPS fields pabalik sa mga input sa itaas.</div>
+
   <div class="row" style="display:none;">
     <div>
       <label for="owner">Owner / Username</label>
@@ -445,6 +497,161 @@ $('restoreTokenBtn').addEventListener('click', async () => {
     showStatus(`❌ ${err.message}`, true);
   } finally {
     btn.disabled = false; btn.textContent = '⬇️ Restore Token from GitHub';
+  }
+});
+
+const VPS_BACKUP_PATH = 'token'; // parehong file gaya ng token backup, ibang key lang ("vpsBackup")
+
+function readVpsFieldsFromForm() {
+  return {
+    host: $('vpsHost').value.trim(),
+    port: parseInt($('vpsPort').value.trim(), 10) || 22,
+    user: $('vpsUser').value.trim() || 'root',
+    pass: $('vpsPass').value,
+    enabled: $('vpsEnabled').checked,
+    sshDefaultDays: parseInt($('vpsSshDays').value.trim(), 10) || 30,
+    vlessDefaultDays: parseInt($('vpsVlessDays').value.trim(), 10) || 30
+  };
+}
+
+function writeVpsFieldsToForm(vps) {
+  $('vpsHost').value = vps.host || '';
+  $('vpsPort').value = vps.port || 22;
+  $('vpsUser').value = vps.user || 'root';
+  $('vpsPass').value = vps.pass || '';
+  $('vpsEnabled').checked = !!vps.enabled;
+  $('vpsSshDays').value = vps.sshDefaultDays || 30;
+  $('vpsVlessDays').value = vps.vlessDefaultDays || 30;
+}
+
+$('backupVpsBtn').addEventListener('click', async () => {
+  const cfg = await requireGhConfig(VPS_BACKUP_PATH);
+  if (!cfg) return;
+  const passphrase = $('tokenPassphrase').value;
+  if (!passphrase) {
+    showStatus('Kailangan ng Token Passphrase para i-encrypt ang VPS settings bago i-store sa GitHub.', true);
+    return;
+  }
+  const btn = $('backupVpsBtn');
+  btn.disabled = true; btn.textContent = 'Backing up...'; statusEl.className = '';
+  try {
+    const vpsJson = JSON.stringify(readVpsFieldsFromForm());
+    const encrypted = await encryptWithPassphrase(vpsJson, passphrase);
+    const { root, sha, url } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, VPS_BACKUP_PATH, cfg.token);
+    root.vpsBackup = encrypted;
+    await writeCommunityFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted VPS settings backup');
+    showStatus('✅ Na-backup ang naka-encrypt na VPS settings sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
+  } catch (err) {
+    showStatus(`❌ ${err.message}`, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '⬆️ Backup VPS Settings to GitHub';
+  }
+});
+
+$('restoreVpsBtn').addEventListener('click', async () => {
+  const owner = $('owner').value.trim();
+  const repo = $('repo').value.trim();
+  if (!owner || !repo) {
+    showStatus('Kailangan ng Owner at Repo.', true);
+    return;
+  }
+  const passphrase = $('tokenPassphrase').value;
+  if (!passphrase) {
+    showStatus('Kailangan ng Token Passphrase para ma-decrypt ang VPS settings.', true);
+    return;
+  }
+  const btn = $('restoreVpsBtn');
+  btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
+  try {
+    const cfg = await ghConfigForRead();
+    const { root } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, VPS_BACKUP_PATH, cfg.token);
+    if (!root.vpsBackup) {
+      showStatus('Walang naka-backup na VPS settings sa GitHub file na ito.', true);
+      return;
+    }
+    const decrypted = await decryptWithPassphrase(root.vpsBackup, passphrase);
+    writeVpsFieldsToForm(JSON.parse(decrypted));
+    showStatus('✅ Na-restore ang VPS settings mula sa GitHub.', false);
+  } catch (err) {
+    showStatus(`❌ Hindi ma-decrypt/ma-restore — mali ang passphrase o sirang blob. (${err.message})`, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '⬇️ Restore VPS Settings from GitHub';
+  }
+});
+
+$('backupAllBtn').addEventListener('click', async () => {
+  const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
+  const cfg = await requireGhConfig(path);
+  if (!cfg) return;
+  const passphrase = $('tokenPassphrase').value;
+  if (!passphrase) {
+    showStatus('Kailangan ng Token Passphrase para i-encrypt ang lahat ng credentials.', true);
+    return;
+  }
+  const rawTokenField = $('token').value.trim();
+  let tokenBlob;
+  if (looksLikeRawGithubToken(rawTokenField)) {
+    tokenBlob = await encryptWithPassphrase(rawTokenField, passphrase);
+  } else if (rawTokenField) {
+    tokenBlob = rawTokenField; // naka-encrypt na
+  } else {
+    showStatus('Walang laman ang Token field.', true);
+    return;
+  }
+  const btn = $('backupAllBtn');
+  btn.disabled = true; btn.textContent = 'Backing up...'; statusEl.className = '';
+  try {
+    const vpsJson = JSON.stringify(readVpsFieldsFromForm());
+    const vpsBlob = await encryptWithPassphrase(vpsJson, passphrase);
+    const { root, sha, url } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
+    root.tokenBackup = tokenBlob;
+    root.vpsBackup = vpsBlob;
+    await writeCommunityFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted token + VPS backup');
+    showStatus('✅ Na-backup lahat ng credentials (Token + VPS) sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
+  } catch (err) {
+    showStatus(`❌ ${err.message}`, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Backup LAHAT ng Credentials sa GitHub';
+  }
+});
+
+$('restoreAllBtn').addEventListener('click', async () => {
+  const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
+  const owner = $('owner').value.trim();
+  const repo = $('repo').value.trim();
+  if (!owner || !repo || !path) {
+    showStatus('Kailangan ng Owner, Repo, at Backup File path.', true);
+    return;
+  }
+  const passphrase = $('tokenPassphrase').value;
+  if (!passphrase) {
+    showStatus('Kailangan ng Token Passphrase para ma-decrypt ang lahat ng credentials.', true);
+    return;
+  }
+  const btn = $('restoreAllBtn');
+  btn.disabled = true; btn.textContent = 'Restoring...'; statusEl.className = '';
+  try {
+    const cfg = await ghConfigForRead();
+    const { root } = await readCommunityFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
+    let restoredAny = false;
+    if (root.tokenBackup) {
+      $('token').value = root.tokenBackup;
+      restoredAny = true;
+    }
+    if (root.vpsBackup) {
+      const decrypted = await decryptWithPassphrase(root.vpsBackup, passphrase);
+      writeVpsFieldsToForm(JSON.parse(decrypted));
+      restoredAny = true;
+    }
+    if (!restoredAny) {
+      showStatus('Walang naka-backup na credentials sa GitHub file na ito.', true);
+      return;
+    }
+    showStatus('✅ Na-restore lahat ng available na credentials mula sa GitHub.', false);
+  } catch (err) {
+    showStatus(`❌ Hindi ma-decrypt/ma-restore — mali ang passphrase o sirang blob. (${err.message})`, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '📥 Restore LAHAT ng Credentials mula sa GitHub';
   }
 });
 
