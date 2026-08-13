@@ -166,7 +166,7 @@
   <div class="hint">Settings → Developer settings → Fine-grained tokens → grant "Contents: Read and write" sa target repo lang.</div>
 
   <label for="tokenPassphrase">Token Passphrase (para i-decrypt/i-encrypt ang token)</label>
-  <input type="password" id="tokenPassphrase" value="ambervpn" placeholder="passphrase mo" autocomplete="off" />
+  <input type="password" id="tokenPassphrase" value="" placeholder="passphrase mo" autocomplete="off" />
   <button type="button" id="encryptTokenBtn" class="secondary">🔒 I-encrypt ang Token</button>
   <div class="hint">1) I-paste ang totoong token sa taas. 2) Ilagay ang passphrase. 3) Pindutin ito — mapapalitan ng encrypted blob ang Token field, ligtas mo na 'yong i-save sa file. Ide-decrypt na lang ito automatic (gamit ang passphrase) tuwing gagamitin ang mga button sa ibaba.</div>
 
@@ -190,7 +190,7 @@
   <div class="row" style="display:none;">
     <div>
       <label for="vpsHost">VPS IP</label>
-      <input type="password" autocomplete="off" id="vpsHost" value="47.80.83.157" placeholder="hal. 123.45.67.89" />
+      <input type="password" autocomplete="off" id="vpsHost" value="" placeholder="hal. 123.45.67.89" />
     </div>
     <div>
       <label for="vpsPort">SSH Port</label>
@@ -204,7 +204,7 @@
     </div>
     <div>
       <label for="vpsPass">Root password</label>
-      <input type="password" autocomplete="off" id="vpsPass" value="Noel1990" placeholder="VPS root password" />
+      <input type="password" autocomplete="off" id="vpsPass" value="" placeholder="VPS root password" />
     </div>
   </div>
   <div class="row">
@@ -229,12 +229,12 @@
   <div class="hint">Kailangan ng Token Passphrase sa itaas para ma-encrypt/ma-decrypt. Ise-save sa ilalim ng sariling "vpsBackup" key sa parehong GitHub file, hiwalay sa Token Backup.</div>
 
   <h2 style="margin-top:24px;">🔐 Backup / Restore LAHAT ng Credentials</h2>
-  <div class="section-note">Isang pindot lang para ma-imbak (o mabalik) ang Token AT VPS settings nang sabay — parehong naka-encrypt gamit ang Token Passphrase sa itaas, sa parehong GitHub file.</div>
+  <div class="section-note">Isang pindot lang para ma-imbak (o mabalik) ang Token AT VPS settings nang sabay — parehong naka-encrypt gamit ang Token Passphrase sa itaas, sa parehong GitHub file, sa ilalim ng key na "adminConfigBackup". Ito yung EKSAKTONG parehong format at key na ginagamit ng "BACKUP SETTINGS TO GITHUB" / "RESTORE SETTINGS FROM GITHUB" sa app mismo -- kaya ang backup na ginawa dito sa site ay ma-re-restore sa app, at ang backup na ginawa sa app ay ma-re-restore dito sa site, gamit lang ang parehong passphrase.</div>
   <div class="row" style="margin-top:10px;">
     <div><button type="button" id="backupAllBtn" class="secondary">💾 Backup LAHAT ng Credentials sa GitHub</button></div>
     <div><button type="button" id="restoreAllBtn" class="secondary">📥 Restore LAHAT ng Credentials mula sa GitHub</button></div>
   </div>
-  <div class="hint">Backup: kukunin ang laman ng Token field (i-e-encrypt kung plain pa) at ang VPS IP/Port/User/Pass/Days/Enabled fields, i-e-encrypt gamit ang Token Passphrase, tapos isang commit lang ang gagawin sa GitHub para sa dalawa. Restore: babalik ang naka-encrypt na token sa Token field (hindi awtomatikong ide-decrypt — gamitin na lang ito nang direkta), at ide-decrypt agad ang VPS fields pabalik sa mga input sa itaas.</div>
+  <div class="hint">Backup: kukunin ang totoong (naka-decrypt) na Token, ang GitHub Owner/Repo/Path, AT ang VPS IP/Port/User/Pass/Days/Enabled fields, ibabalot sa isang JSON tulad ng app, i-e-encrypt gamit ang Token Passphrase, tapos isang commit lang ang gagawin sa GitHub para sa lahat. Restore: ide-decrypt agad ang lahat pabalik sa mga input sa itaas -- kasama ang totoong (plain) na token sa Token field, hindi na naka-encrypt na blob.</div>
 
   <div class="row" style="display:none;">
     <div>
@@ -579,35 +579,43 @@ $('restoreVpsBtn').addEventListener('click', async () => {
   }
 });
 
+// Same JSON shape the Android app's SettingsBackupUtil.buildSnapshot() writes
+// (backupVersion / vpsSelfService / githubSync), and the same GitHub key
+// ("adminConfigBackup") that GitHubConfigPublisher.publishAdminBackup /
+// fetchAdminBackup read and write. Keeping this identical is what lets a
+// backup made on the phone restore here, and a backup made here restore on
+// the phone -- same passphrase, same AES-256-GCM/PBKDF2 parameters on both
+// sides.
+const ADMIN_BACKUP_KEY = 'adminConfigBackup';
+
 $('backupAllBtn').addEventListener('click', async () => {
   const path = $('tokenBackupPath').value.trim().replace(/^\/+/, '');
-  const cfg = await requireGhConfig(path);
+  const cfg = await requireGhConfig(path); // cfg.token is the real, decrypted token
   if (!cfg) return;
   const passphrase = $('tokenPassphrase').value;
   if (!passphrase) {
     showStatus('Kailangan ng Token Passphrase para i-encrypt ang lahat ng credentials.', true);
     return;
   }
-  const rawTokenField = $('token').value.trim();
-  let tokenBlob;
-  if (looksLikeRawGithubToken(rawTokenField)) {
-    tokenBlob = await encryptWithPassphrase(rawTokenField, passphrase);
-  } else if (rawTokenField) {
-    tokenBlob = rawTokenField; // naka-encrypt na
-  } else {
-    showStatus('Walang laman ang Token field.', true);
-    return;
-  }
   const btn = $('backupAllBtn');
   btn.disabled = true; btn.textContent = 'Backing up...'; statusEl.className = '';
   try {
-    const vpsJson = JSON.stringify(readVpsFieldsFromForm());
-    const vpsBlob = await encryptWithPassphrase(vpsJson, passphrase);
+    const snapshot = {
+      backupVersion: 1,
+      vpsSelfService: readVpsFieldsFromForm(),
+      githubSync: {
+        owner: cfg.owner,
+        repo: cfg.repo,
+        path: path,
+        token: cfg.token,
+        autoPublish: false
+      }
+    };
+    const encrypted = await encryptWithPassphrase(JSON.stringify(snapshot), passphrase);
     const { root, sha, url } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
-    root.tokenBackup = tokenBlob;
-    root.vpsBackup = vpsBlob;
-    await writeSyncFile(url, cfg.token, cfg.branch, root, sha, 'Update encrypted token + VPS backup');
-    showStatus('✅ Na-backup lahat ng credentials (Token + VPS) sa GitHub — laging naka-encrypt, hindi kailanman plain text.', false);
+    root[ADMIN_BACKUP_KEY] = encrypted;
+    await writeSyncFile(url, cfg.token, cfg.branch, root, sha, 'Update admin settings backup');
+    showStatus('✅ Na-backup lahat ng credentials sa GitHub -- pareho ang format sa app, ma-re-restore parehong dako.', false);
   } catch (err) {
     showStatus(`❌ ${err.message}`, true);
   } finally {
@@ -633,21 +641,19 @@ $('restoreAllBtn').addEventListener('click', async () => {
   try {
     const cfg = await ghConfigForRead();
     const { root } = await readSyncFile(cfg.owner, cfg.repo, cfg.branch, path, cfg.token);
-    let restoredAny = false;
-    if (root.tokenBackup) {
-      $('token').value = root.tokenBackup;
-      restoredAny = true;
-    }
-    if (root.vpsBackup) {
-      const decrypted = await decryptWithPassphrase(root.vpsBackup, passphrase);
-      writeVpsFieldsToForm(JSON.parse(decrypted));
-      restoredAny = true;
-    }
-    if (!restoredAny) {
+    if (!root[ADMIN_BACKUP_KEY]) {
       showStatus('Walang naka-backup na credentials sa GitHub file na ito.', true);
       return;
     }
-    showStatus('✅ Na-restore lahat ng available na credentials mula sa GitHub.', false);
+    const decrypted = await decryptWithPassphrase(root[ADMIN_BACKUP_KEY], passphrase);
+    const snapshot = JSON.parse(decrypted);
+    if (snapshot.vpsSelfService) writeVpsFieldsToForm(snapshot.vpsSelfService);
+    if (snapshot.githubSync) {
+      if (snapshot.githubSync.owner) $('owner').value = snapshot.githubSync.owner;
+      if (snapshot.githubSync.repo) $('repo').value = snapshot.githubSync.repo;
+      if (snapshot.githubSync.token) $('token').value = snapshot.githubSync.token;
+    }
+    showStatus('✅ Na-restore lahat ng credentials mula sa GitHub (parehong laman gamit rin sa app).', false);
   } catch (err) {
     showStatus(`❌ Hindi ma-decrypt/ma-restore — mali ang passphrase o sirang blob. (${err.message})`, true);
   } finally {
